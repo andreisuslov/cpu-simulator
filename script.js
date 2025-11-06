@@ -16,6 +16,9 @@ let previousRam = ram.map(item => ({ ...item }));
 let executionPhase = 'Fetch';
 let currentMode = 'display';
 let hasChanges = false;
+let executionMode = 'manual'; // 'manual' or 'auto'
+let autoInterval = null;
+let isAutoRunning = false;
 
 const instructions = ['', 'LOAD', 'ADD', 'STORE', 'JUMP'];
 
@@ -228,6 +231,65 @@ function toggleExplanation() {
         explanation.classList.add('visible');
         button.textContent = 'Hide Explanation';
     }
+}
+
+function toggleExecutionMode() {
+    // Stop auto mode if switching away from it
+    if (executionMode === 'auto' && isAutoRunning) {
+        stopAuto();
+    }
+    
+    // Toggle between manual and auto
+    executionMode = executionMode === 'manual' ? 'auto' : 'manual';
+    
+    // Update toggle button label
+    const modeLabel = document.getElementById('modeLabel');
+    modeLabel.textContent = executionMode === 'manual' ? 'Manual' : 'Auto';
+    
+    // Update toggle button style
+    const toggleBtn = document.getElementById('modeToggleBtn');
+    toggleBtn.classList.toggle('auto-active', executionMode === 'auto');
+    
+    // Show/hide appropriate controls
+    document.getElementById('manualControls').classList.toggle('hidden', executionMode !== 'manual');
+    document.getElementById('autoControls').classList.toggle('hidden', executionMode !== 'auto');
+}
+
+function startAuto() {
+    if (currentMode === 'edit') {
+        toggleMode();
+    }
+    
+    const intervalMs = parseFloat(document.getElementById('intervalInput').value);
+    if (isNaN(intervalMs) || intervalMs <= 0) {
+        alert('Please enter a valid interval greater than 0');
+        return;
+    }
+    
+    isAutoRunning = true;
+    document.getElementById('startBtn').classList.add('hidden');
+    document.getElementById('stopBtn').classList.remove('hidden');
+    document.getElementById('intervalInput').disabled = true;
+    
+    // Execute first tick immediately
+    executeInstruction();
+    
+    // Set up interval for subsequent ticks
+    autoInterval = setInterval(() => {
+        executeInstruction();
+    }, intervalMs);
+}
+
+function stopAuto() {
+    isAutoRunning = false;
+    if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+    }
+    
+    document.getElementById('startBtn').classList.remove('hidden');
+    document.getElementById('stopBtn').classList.add('hidden');
+    document.getElementById('intervalInput').disabled = false;
 }
 
 // Initialize the display

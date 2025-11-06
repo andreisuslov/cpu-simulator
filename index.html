@@ -11,8 +11,31 @@
     <div class="container">
         <div class="simulator">
             <div class="cpu">
-                <h2>CPU</h2>
-                <button id="clockTick" onclick="clockTick()">Clock Tick</button>
+                <div class="cpu-header">
+                    <h2>CPU</h2>
+                    <div class="mode-toggle">
+                        <button id="modeToggleBtn" onclick="toggleExecutionMode()" title="Toggle Manual/Auto Mode">
+                            <span id="modeLabel">Manual</span>
+                            <svg id="toggleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6m8.66-13.66l-4.24 4.24m-4.84 4.84l-4.24 4.24M23 12h-6m-6 0H1m18.66 8.66l-4.24-4.24m-4.84-4.84l-4.24-4.24"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="mode-controls">
+                    <div id="manualControls" class="control-group">
+                        <button id="clockTick" onclick="clockTick()">Clock Tick</button>
+                    </div>
+                    <div id="autoControls" class="control-group hidden">
+                        <div class="interval-control">
+                            <label for="intervalInput">Interval (ms):</label>
+                            <input type="number" id="intervalInput" min="10" max="5000" step="10" value="100">
+                        </div>
+                        <button id="startBtn" onclick="startAuto()">Start</button>
+                        <button id="stopBtn" onclick="stopAuto()" class="hidden">Stop</button>
+                    </div>
+                </div>
                 <div class="register">
                     <h3>Program Counter</h3>
                     <div id="pc" class="register-value">0</div>
@@ -71,6 +94,7 @@
                 <li><strong>CPU:</strong> the brain of the computer, containing registers for temporary data storage and processing.</li>
                 <li><strong>RAM (Random Access Memory):</strong> where instructions and data are stored for quick access.</li>
                 <li><strong>Clock:</strong> represented by the "Clock Tick" button, it drives the CPU through its cycle.</li>
+                 <li>The program counter keeps track of which instruction to execute next.</li>
             </ul>
             <p>The CPU operates in a continuous "Fetch-Decode-Execute" cycle:</p>
             <ol>

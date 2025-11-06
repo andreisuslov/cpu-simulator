@@ -191,6 +191,133 @@ button:active {
     align-items: center;
     justify-content: center;
 }
+
+.cpu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.cpu-header h2 {
+    margin-bottom: 0;
+}
+
+.mode-toggle {
+    display: flex;
+    align-items: center;
+}
+
+#modeToggleBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: #a0a0b0;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: none;
+    height: auto;
+    margin: 0;
+    border-radius: 12px;
+    width: auto;
+}
+
+#modeToggleBtn svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+}
+
+#modeToggleBtn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(221, 132, 72, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(221, 132, 72, 0.2);
+}
+
+#modeToggleBtn.auto-active {
+    background: linear-gradient(135deg, #dd8448 0%, #c96d3a 100%);
+    border-color: rgba(221, 132, 72, 0.5);
+    color: white;
+    box-shadow: 0 4px 16px rgba(221, 132, 72, 0.3);
+}
+
+#modeToggleBtn.auto-active:hover {
+    background: linear-gradient(135deg, #ffa366 0%, #dd8448 100%);
+}
+
+#modeToggleBtn.auto-active svg {
+    transform: rotate(180deg);
+}
+
+.mode-controls {
+    margin-bottom: 20px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.interval-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.interval-control label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a0a0b0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.interval-control input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    transition: all 0.2s ease;
+}
+
+.interval-control input[type="number"]:focus {
+    outline: none;
+    border-color: rgba(221, 132, 72, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 0 3px rgba(221, 132, 72, 0.1);
+}
+
+.interval-control input[type="number"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#startBtn, #stopBtn {
+    margin-top: 0;
+}
+
+#stopBtn {
+    background: linear-gradient(135deg, #c94848 0%, #a63a3a 100%);
+}
+
+#stopBtn:hover {
+    background: linear-gradient(135deg, #ff6666 0%, #c94848 100%);
+}
 .ram-table-container {
     flex-grow: 1;
     overflow-y: auto;

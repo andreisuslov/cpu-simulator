@@ -19,6 +19,9 @@ let hasChanges = false;
 let executionMode = 'manual'; // 'manual' or 'auto'
 let autoInterval = null;
 let isAutoRunning = false;
+let currentIntervalMs = 0;
+let targetIntervalMs = 0;
+let accelerationSteps = 10; // Number of steps to reach target speed
 
 const instructions = ['', 'LOAD', 'ADD', 'STORE', 'JUMP'];
 
@@ -271,19 +274,43 @@ function startAuto() {
     document.getElementById('stopBtn').classList.remove('hidden');
     document.getElementById('intervalInput').disabled = true;
     
+    // Set target interval and start with 3x slower speed
+    targetIntervalMs = intervalMs;
+    currentIntervalMs = intervalMs * 3;
+    let stepCount = 0;
+    
     // Execute first tick immediately
     executeInstruction();
     
-    // Set up interval for subsequent ticks
-    autoInterval = setInterval(() => {
-        executeInstruction();
-    }, intervalMs);
+    // Function to gradually speed up
+    const scheduleNextTick = () => {
+        if (!isAutoRunning) return;
+        
+        autoInterval = setTimeout(() => {
+            executeInstruction();
+            
+            // Gradually decrease interval (speed up) over accelerationSteps
+            if (stepCount < accelerationSteps) {
+                stepCount++;
+                const progress = stepCount / accelerationSteps;
+                // Ease-in curve for smooth acceleration
+                const easedProgress = progress * progress;
+                currentIntervalMs = intervalMs * 3 - (intervalMs * 2 * easedProgress);
+            } else {
+                currentIntervalMs = targetIntervalMs;
+            }
+            
+            scheduleNextTick();
+        }, currentIntervalMs);
+    };
+    
+    scheduleNextTick();
 }
 
 function stopAuto() {
     isAutoRunning = false;
     if (autoInterval) {
-        clearInterval(autoInterval);
+        clearTimeout(autoInterval);
         autoInterval = null;
     }
     

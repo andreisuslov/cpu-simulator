@@ -380,8 +380,25 @@ button:active {
     cursor: not-allowed;
 }
 
-#startBtn, #stopBtn {
+#startBtn, #stopBtn, #pauseBtn {
     margin-top: 0;
+}
+
+.running-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.running-controls button {
+    flex: 1;
+}
+
+#pauseBtn {
+    background: linear-gradient(135deg, #dd8448 0%, #c96d3a 100%);
+}
+
+#pauseBtn:hover {
+    background: linear-gradient(135deg, #ffa366 0%, #dd8448 100%);
 }
 
 #stopBtn {

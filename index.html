@@ -33,7 +33,10 @@
                             <input type="number" id="intervalInput" min="10" max="5000" step="10" value="100">
                         </div>
                         <button id="startBtn" onclick="startAuto()">Start</button>
-                        <button id="stopBtn" onclick="stopAuto()" class="hidden">Stop</button>
+                        <div id="runningControls" class="running-controls hidden">
+                            <button id="pauseBtn" onclick="pauseAuto()">Pause</button>
+                            <button id="stopBtn" onclick="stopAuto()">Stop</button>
+                        </div>
                     </div>
                 </div>
                 <div class="register">

@@ -19,6 +19,7 @@ let hasChanges = false;
 let executionMode = 'manual'; // 'manual' or 'auto'
 let autoInterval = null;
 let isAutoRunning = false;
+let isPaused = false;
 let currentIntervalMs = 0;
 let targetIntervalMs = 0;
 let accelerationSteps = 10; // Number of steps to reach target speed
@@ -378,8 +379,10 @@ function startAuto() {
     }
     
     isAutoRunning = true;
+    isPaused = false;
     document.getElementById('startBtn').classList.add('hidden');
-    document.getElementById('stopBtn').classList.remove('hidden');
+    document.getElementById('runningControls').classList.remove('hidden');
+    document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('intervalInput').disabled = true;
     
     // Set target interval and start with 3x slower speed
@@ -415,15 +418,51 @@ function startAuto() {
     scheduleNextTick();
 }
 
+function pauseAuto() {
+    if (isPaused) {
+        // Resume
+        isPaused = false;
+        isAutoRunning = true;
+        document.getElementById('pauseBtn').textContent = 'Pause';
+        
+        // Restart the auto execution
+        const intervalMs = parseFloat(document.getElementById('intervalInput').value);
+        targetIntervalMs = intervalMs;
+        currentIntervalMs = intervalMs;
+        
+        const scheduleNextTick = () => {
+            if (!isAutoRunning || isPaused) return;
+            
+            autoInterval = setTimeout(() => {
+                executeInstruction();
+                scheduleNextTick();
+            }, currentIntervalMs);
+        };
+        
+        scheduleNextTick();
+    } else {
+        // Pause
+        isPaused = true;
+        isAutoRunning = false;
+        if (autoInterval) {
+            clearTimeout(autoInterval);
+            autoInterval = null;
+        }
+        document.getElementById('pauseBtn').textContent = 'Resume';
+    }
+}
+
 function stopAuto() {
     isAutoRunning = false;
+    isPaused = false;
     if (autoInterval) {
         clearTimeout(autoInterval);
         autoInterval = null;
     }
     
     document.getElementById('startBtn').classList.remove('hidden');
-    document.getElementById('stopBtn').classList.add('hidden');
+    document.getElementById('runningControls').classList.add('hidden');
+    document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('intervalInput').disabled = false;
 }
 

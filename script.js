@@ -319,5 +319,10 @@ function stopAuto() {
     document.getElementById('intervalInput').disabled = false;
 }
 
+function resetAccumulator() {
+    accumulator = 0;
+    updateDisplay();
+}
+
 // Initialize the display
 updateDisplay();

@@ -33,6 +33,10 @@ body {
     margin: 0;
     padding: 20px;
     color: #e0e0e0;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 .container {
     width: auto;

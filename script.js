@@ -3,14 +3,14 @@ let previousPc = 0;
 let ir = '';
 let accumulator = 0;
 let ram = [
-    { address: 0, value: 'LOAD 6' },
-    { address: 1, value: 'ADD 7' },
-    { address: 2, value: 'STORE 6' },
-    { address: 3, value: 'JUMP 1' },
-    { address: 4, value: '0' },
-    { address: 5, value: '0' },
-    { address: 6, value: '1' },
-    { address: 7, value: '1' },
+    { address: 0, type: 'instruction', value: 'LOAD 6' },
+    { address: 1, type: 'instruction', value: 'ADD 7' },
+    { address: 2, type: 'instruction', value: 'STORE 6' },
+    { address: 3, type: 'instruction', value: 'JUMP 1' },
+    { address: 4, type: 'data', value: '0' },
+    { address: 5, type: 'data', value: '0' },
+    { address: 6, type: 'data', value: '1' },
+    { address: 7, type: 'data', value: '1' },
 ];
 let previousRam = ram.map(item => ({ ...item }));
 let executionPhase = 'Fetch';
@@ -66,43 +66,120 @@ function updateRAMTable() {
         const row = ramTable.insertRow();
         row.insertCell(0).textContent = item.address;
         
+        // Type column
+        const typeCell = row.insertCell(1);
         if (currentMode === 'edit') {
-            const cell = row.insertCell(1);
-            const [instruction, operand] = item.value.split(' ');
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'select';
             
-            const select = document.createElement('select');
-            instructions.forEach(instr => {
-                const option = document.createElement('option');
-                option.value = instr;
-                option.textContent = instr || '(empty)';
-                option.selected = instr === instruction;
-                select.appendChild(option);
-            });
+            const instructionOption = document.createElement('option');
+            instructionOption.value = 'instruction';
+            instructionOption.textContent = 'Instruction';
+            instructionOption.selected = item.type === 'instruction';
             
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = operand || '';
+            const dataOption = document.createElement('option');
+            dataOption.value = 'data';
+            dataOption.textContent = 'Data';
+            dataOption.selected = item.type === 'data';
             
-            select.onchange = () => checkForChanges();
-            input.oninput = () => checkForChanges();
+            typeSelect.appendChild(instructionOption);
+            typeSelect.appendChild(dataOption);
+            typeSelect.onchange = () => {
+                // Rebuild only the value cell when type changes
+                const valueCell = row.cells[2];
+                valueCell.innerHTML = '';
+                const currentType = typeSelect.value;
+                if (currentType === 'instruction') {
+                    const [instruction, operand] = item.value.split(' ');
+                    const select = document.createElement('select');
+                    select.className = 'select';
+                    instructions.forEach(instr => {
+                        const option = document.createElement('option');
+                        option.value = instr;
+                        option.textContent = instr;
+                        option.selected = instr === instruction;
+                        select.appendChild(option);
+                    });
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = operand || '';
+                    select.onchange = () => checkForChanges();
+                    input.oninput = () => checkForChanges();
+                    valueCell.appendChild(select);
+                    valueCell.appendChild(input);
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = item.value || '0';
+                    input.oninput = () => checkForChanges();
+                    valueCell.appendChild(input);
+                }
+                checkForChanges();
+            };
             
-            cell.appendChild(select);
-            cell.appendChild(input);
+            typeCell.appendChild(typeSelect);
         } else {
-            const cell = row.insertCell(1);
-            cell.textContent = item.value || '0';
+            typeCell.textContent = item.type === 'instruction' ? 'Instruction' : 'Data';
+            typeCell.className = item.type === 'instruction' ? 'type-instruction' : 'type-data';
+        }
+        
+        // Value column
+        if (currentMode === 'edit') {
+            const valueCell = row.insertCell(2);
+            
+            // Get the current type from the type select dropdown
+            const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+            const currentType = typeSelect ? typeSelect.value : item.type;
+            
+            if (currentType === 'instruction') {
+                // For instructions: show dropdown + input
+                const [instruction, operand] = item.value.split(' ');
+                
+                const select = document.createElement('select');
+                select.className = 'select';
+                instructions.forEach(instr => {
+                    const option = document.createElement('option');
+                    option.value = instr;
+                    option.textContent = instr;
+                    option.selected = instr === instruction;
+                    select.appendChild(option);
+                });
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = operand || '';
+                
+                select.onchange = () => checkForChanges();
+                input.oninput = () => checkForChanges();
+                
+                valueCell.appendChild(select);
+                valueCell.appendChild(input);
+            } else {
+                // For data: show only input
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = item.value || '0';
+                input.oninput = () => checkForChanges();
+                
+                valueCell.appendChild(input);
+            }
+        } else {
+            const valueCell = row.insertCell(2);
+            valueCell.textContent = item.value || '0';
             
             // Check if this RAM cell has changed and trigger electric animation
             const previousItem = previousRam.find(prev => prev.address === item.address);
             if (previousItem && previousItem.value !== item.value) {
-                // Apply electric effect to both address and value cells
+                // Apply electric effect to address, type, and value cells
                 row.cells[0].classList.add('electric-active');
                 row.cells[1].classList.add('electric-active');
+                row.cells[2].classList.add('electric-active');
                 
                 // Remove the class after animation completes
                 setTimeout(() => {
                     row.cells[0].classList.remove('electric-active');
                     row.cells[1].classList.remove('electric-active');
+                    row.cells[2].classList.remove('electric-active');
                 }, 1200);
             }
         }
@@ -115,7 +192,7 @@ function updateRAMTable() {
     if (currentMode === 'edit') {
         const saveButtonRow = ramTable.insertRow();
         const saveButtonCell = saveButtonRow.insertCell(0);
-        saveButtonCell.colSpan = 2;
+        saveButtonCell.colSpan = 3;
         const saveButton = document.createElement('button');
         saveButton.textContent = 'Save All Changes';
         saveButton.onclick = saveAllChanges;
@@ -131,17 +208,38 @@ function checkForChanges() {
     
     for (let i = 0; i < ram.length; i++) {
         const row = ramTable.rows[i];
-        const select = row.cells[1].getElementsByTagName('select')[0];
-        const input = row.cells[1].getElementsByTagName('input')[0];
+        const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+        const newType = typeSelect.value;
         
-        const newInstruction = select.value;
-        const newOperand = input.value;
-        const originalValue = ram[i].value;
-        const [originalInstruction, originalOperand] = originalValue.split(' ');
-        
-        if (newInstruction !== (originalInstruction || '') || newOperand !== (originalOperand || '')) {
+        // Check if type changed
+        if (newType !== ram[i].type) {
             hasChanges = true;
             break;
+        }
+        
+        // Check value based on type
+        if (newType === 'instruction') {
+            const valueSelect = row.cells[2].getElementsByTagName('select')[0];
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            const newInstruction = valueSelect.value;
+            const newOperand = valueInput.value;
+            const originalValue = ram[i].value;
+            const [originalInstruction, originalOperand] = originalValue.split(' ');
+            
+            if (newInstruction !== (originalInstruction || '') || 
+                newOperand !== (originalOperand || '')) {
+                hasChanges = true;
+                break;
+            }
+        } else {
+            // Data type - just check the input value
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            const newValue = valueInput.value;
+            
+            if (newValue !== ram[i].value) {
+                hasChanges = true;
+                break;
+            }
         }
     }
     
@@ -156,16 +254,26 @@ function saveAllChanges() {
     
     for (let i = 0; i < ram.length; i++) {
         const row = ramTable.rows[i];
-        const select = row.cells[1].getElementsByTagName('select')[0];
-        const input = row.cells[1].getElementsByTagName('input')[0];
+        const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+        const newType = typeSelect.value;
         
-        const newInstruction = select.value;
-        const newOperand = input.value;
+        ram[i].type = newType;
         
-        if (newInstruction) {
-            ram[i].value = `${newInstruction} ${newOperand}`.trim();
+        if (newType === 'instruction') {
+            const valueSelect = row.cells[2].getElementsByTagName('select')[0];
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            const newInstruction = valueSelect.value;
+            const newOperand = valueInput.value;
+            
+            if (newInstruction) {
+                ram[i].value = `${newInstruction} ${newOperand}`.trim();
+            } else {
+                ram[i].value = newOperand.trim() || '0';
+            }
         } else {
-            ram[i].value = newOperand.trim() || '0';
+            // Data type - just get the input value
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            ram[i].value = valueInput.value.trim() || '0';
         }
     }
     

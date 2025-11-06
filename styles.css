@@ -568,7 +568,22 @@ td input {
 td select {
     margin-right: 10px; /* Gap between select and input */
 }
+
+/* Type column (2nd column) - full width select */
+td:nth-child(2) select {
+    width: 100%;
+    margin-right: 0;
+}
+
+/* Value column (3rd column) - when only input (data type) */
+td:nth-child(3) input:only-child {
+    width: 100%;
+}
+
 td:nth-child(2) {
+    padding: 4px;
+}
+td:nth-child(3) {
     padding: 4px;
 }
 td .input-group {

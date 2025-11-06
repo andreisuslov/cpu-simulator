@@ -1,4 +1,5 @@
 let pc = 0;
+let previousPc = 0;
 let ir = '';
 let accumulator = 0;
 let ram = [
@@ -11,6 +12,7 @@ let ram = [
     { address: 6, value: '1' },
     { address: 7, value: '1' },
 ];
+let previousRam = ram.map(item => ({ ...item }));
 let executionPhase = 'Fetch';
 let currentMode = 'display';
 let hasChanges = false;
@@ -18,7 +20,24 @@ let hasChanges = false;
 const instructions = ['', 'LOAD', 'ADD', 'STORE', 'JUMP'];
 
 function updateDisplay() {
-    document.getElementById('pc').textContent = pc;
+    const pcElement = document.getElementById('pc');
+    
+    // Check if PC has changed and trigger electric animation
+    if (pc !== previousPc) {
+        pcElement.classList.remove('electric-active');
+        // Force reflow to restart animation
+        void pcElement.offsetWidth;
+        pcElement.classList.add('electric-active');
+        
+        // Remove the class after animation completes
+        setTimeout(() => {
+            pcElement.classList.remove('electric-active');
+        }, 1200);
+        
+        previousPc = pc;
+    }
+    
+    pcElement.textContent = pc;
     document.getElementById('ir').textContent = ir;
     document.getElementById('accumulator').textContent = accumulator;
 
@@ -64,9 +83,27 @@ function updateRAMTable() {
             cell.appendChild(select);
             cell.appendChild(input);
         } else {
-            row.insertCell(1).textContent = item.value || '0';
+            const cell = row.insertCell(1);
+            cell.textContent = item.value || '0';
+            
+            // Check if this RAM cell has changed and trigger electric animation
+            const previousItem = previousRam.find(prev => prev.address === item.address);
+            if (previousItem && previousItem.value !== item.value) {
+                // Apply electric effect to both address and value cells
+                row.cells[0].classList.add('electric-active');
+                row.cells[1].classList.add('electric-active');
+                
+                // Remove the class after animation completes
+                setTimeout(() => {
+                    row.cells[0].classList.remove('electric-active');
+                    row.cells[1].classList.remove('electric-active');
+                }, 1200);
+            }
         }
     }
+    
+    // Update previousRam after checking for changes
+    previousRam = ram.map(item => ({ ...item }));
     
     // Add a single Save button for all changes
     if (currentMode === 'edit') {

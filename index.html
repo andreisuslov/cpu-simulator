@@ -12,6 +12,7 @@
         <div class="simulator">
             <div class="cpu">
                 <h2>CPU</h2>
+                <button id="clockTick" onclick="clockTick()">Clock Tick</button>
                 <div class="register">
                     <h3>Program Counter</h3>
                     <div id="pc" class="register-value">0</div>
@@ -29,7 +30,6 @@
                     <div class="execution-phase">Decode</div>
                     <div class="execution-phase">Execute</div>
                 </div>
-                <button id="clockTick" onclick="clockTick()">Clock Tick</button>
             </div>
             <div class="ram">
                 <div class="ram-header">

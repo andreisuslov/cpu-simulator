@@ -365,6 +365,7 @@ td .input-group {
 /* Electric border animation for counter */
 :root {
   --electric-border-color: #dd8448;
+  --electric-light-color: #ffa366;
 }
 
 @keyframes electric-pulse {

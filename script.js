@@ -1,6 +1,6 @@
 let pc = 0;
 let previousPc = 0;
-let ir = '';
+let ir = 'NIL';
 let accumulator = 0;
 let ram = [
     { address: 0, type: 'instruction', value: 'LOAD 6' },

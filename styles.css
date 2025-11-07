@@ -1,5 +1,7 @@
 html, body {
     touch-action: manipulation;
+    overscroll-behavior: none;
+    overflow-x: hidden;
 }
 
 /* Custom Scrollbar */
@@ -106,17 +108,21 @@ h2 {
 .register h3 {
     font-size: 13px;
     font-weight: 600;
-    margin-bottom: 8px;
     color: #a0a0b0;
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin: 0;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    min-height: 28px;
 }
 
 .register-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+
 }
 
 .register-header h3 {
@@ -171,6 +177,18 @@ h2 {
     color: #ffffff;
     transition: all 0.2s ease;
 }
+
+.top-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.top-row .register {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 .bottom-row {
     display: flex;
     gap: 12px;
@@ -178,14 +196,18 @@ h2 {
 }
 
 #execution-phases {
-    flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
 }
 
 .bottom-row .register {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .execution-phase {
@@ -197,6 +219,9 @@ h2 {
     transition: all 0.3s ease;
     font-size: 14px;
     color: #b0b0c0;
+    flex: 1;
+    display: flex;
+    align-items: center;
 }
 
 .execution-phase:last-child {
@@ -806,7 +831,7 @@ td:nth-child(2).electric-active::before {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 4px;
     }
     
     .mode-toggle {
@@ -827,27 +852,53 @@ td:nth-child(2).electric-active::before {
     }
     
     .register {
-        padding: 12px;
-        margin-bottom: 10px;
+        padding-top: 6px;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        box-sizing: border-box;
+        min-height: 40px;
     }
     
     .register h3 {
         font-size: 11px;
+        max-width: 100px;
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1.2;
     }
     
     .register-value {
-        font-size: 18px;
-        padding: 10px;
+        font-size: 16px;
+        padding: 8px;
     }
     
-    .bottom-row {
-        flex-direction: column;
+    .top-row {
+        flex-direction: row;
         gap: 10px;
     }
     
+    .top-row .register {
+        margin-bottom: 10px;
+    }
+    
+    .bottom-row {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .bottom-row .register {
+        flex: 1;
+    }
+    
     .execution-phase {
-        padding: 8px 12px;
-        font-size: 13px;
+        padding: 8px 10px;
+        font-size: 11px;
+        margin-bottom: 0;
+    }
+    
+    .execution-phase:not(:last-child) {
         margin-bottom: 6px;
     }
     
@@ -859,17 +910,19 @@ td:nth-child(2).electric-active::before {
     }
     
     .reset-btn {
-        padding: 4px 10px;
-        height: 26px;
+        padding: 6px;
+        height: 28px;
+        width: 28px;
+        gap: 0;
     }
     
     .reset-btn svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
     
     .reset-btn span {
-        font-size: 11px;
+        display: none;
     }
     
     .interval-control {
@@ -899,6 +952,7 @@ td:nth-child(2).electric-active::before {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        margin-bottom: 4px;
     }
     
     .mode-switch {
@@ -1025,8 +1079,26 @@ td:nth-child(2).electric-active::before {
     }
     
     .register-value {
-        font-size: 16px;
-        padding: 8px;
+        font-size: 14px;
+        padding: 6px;
+    }
+    
+    .top-row {
+        gap: 8px;
+    }
+    
+    .bottom-row {
+        gap: 8px;
+    }
+    
+    .execution-phase {
+        padding: 6px 8px;
+        font-size: 10px;
+        margin-bottom: 0;
+    }
+    
+    .execution-phase:not(:last-child) {
+        margin-bottom: 4px;
     }
     
     button {
@@ -1045,11 +1117,6 @@ td:nth-child(2).electric-active::before {
     
     .pill-button-highlight {
         height: 24px;
-    }
-    
-    .execution-phase {
-        padding: 6px 10px;
-        font-size: 12px;
     }
     
     th, td {

@@ -424,6 +424,7 @@ function pauseAuto() {
         isPaused = false;
         isAutoRunning = true;
         document.getElementById('pauseBtn').textContent = 'Pause';
+        document.getElementById('intervalInput').disabled = true;
         
         // Restart the auto execution
         const intervalMs = parseFloat(document.getElementById('intervalInput').value);
@@ -449,6 +450,7 @@ function pauseAuto() {
             autoInterval = null;
         }
         document.getElementById('pauseBtn').textContent = 'Resume';
+        document.getElementById('intervalInput').disabled = false;
     }
 }
 

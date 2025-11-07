@@ -421,13 +421,18 @@ function startAuto() {
 function pauseAuto() {
     if (isPaused) {
         // Resume
+        const intervalMs = parseFloat(document.getElementById('intervalInput').value);
+        if (isNaN(intervalMs) || intervalMs <= 0) {
+            alert('Please enter a valid interval greater than 0');
+            return;
+        }
+        
         isPaused = false;
         isAutoRunning = true;
         document.getElementById('pauseBtn').textContent = 'Pause';
         document.getElementById('intervalInput').disabled = true;
         
         // Restart the auto execution
-        const intervalMs = parseFloat(document.getElementById('intervalInput').value);
         targetIntervalMs = intervalMs;
         currentIntervalMs = intervalMs;
         

@@ -345,22 +345,42 @@ function toggleExplanation() {
     }
 }
 
-function toggleExecutionMode() {
+function toggleExecutionMode(mode) {
     // Stop auto mode if switching away from it
     if (executionMode === 'auto' && isAutoRunning) {
         stopAuto();
     }
     
-    // Toggle between manual and auto
-    executionMode = executionMode === 'manual' ? 'auto' : 'manual';
+    // Set the execution mode
+    executionMode = mode;
     
-    // Update toggle button label
-    const modeLabel = document.getElementById('modeLabel');
-    modeLabel.textContent = executionMode === 'manual' ? 'Manual' : 'Auto';
+    // Update pill button state
+    const pillButtonInput = document.getElementById('pillButtonInput');
+    const manualSelection = document.querySelector('.pill-button-selection_manual');
+    const autoSelection = document.querySelector('.pill-button-selection_auto');
+    const highlight = document.querySelector('.pill-button-highlight');
     
-    // Update toggle button style
-    const toggleBtn = document.getElementById('modeToggleBtn');
-    toggleBtn.classList.toggle('auto-active', executionMode === 'auto');
+    if (executionMode === 'manual') {
+        pillButtonInput.checked = false;
+        manualSelection.classList.add('pill-button-selection_active');
+        autoSelection.classList.remove('pill-button-selection_active');
+        
+        // Position highlight on manual
+        const manualWidth = manualSelection.offsetWidth;
+        const manualPosition = manualSelection.offsetLeft;
+        highlight.style.width = manualWidth + 'px';
+        highlight.style.left = manualPosition + 'px';
+    } else {
+        pillButtonInput.checked = true;
+        manualSelection.classList.remove('pill-button-selection_active');
+        autoSelection.classList.add('pill-button-selection_active');
+        
+        // Position highlight on auto
+        const autoWidth = autoSelection.offsetWidth;
+        const autoPosition = autoSelection.offsetLeft;
+        highlight.style.width = autoWidth + 'px';
+        highlight.style.left = autoPosition + 'px';
+    }
     
     // Show/hide appropriate controls
     document.getElementById('manualControls').classList.toggle('hidden', executionMode !== 'manual');
@@ -478,5 +498,77 @@ function resetAccumulator() {
     updateDisplay();
 }
 
+// Initialize pill button
+function initializePillButton() {
+    const pillButton = document.querySelector('.pill-button');
+    const pillButtonManual = document.querySelector('.pill-button-selection_manual');
+    const pillButtonAuto = document.querySelector('.pill-button-selection_auto');
+    const pillButtonHighlight = document.querySelector('.pill-button-highlight');
+    const pillButtonInput = document.getElementById('pillButtonInput');
+    
+    // Function to update highlight dimensions
+    function updateHighlightDimensions() {
+        // Force reflow to get accurate dimensions
+        void pillButton.offsetWidth;
+        
+        const activeSelection = document.querySelector('.pill-button-selection_active');
+        if (activeSelection) {
+            // Use requestAnimationFrame to ensure DOM has updated
+            requestAnimationFrame(() => {
+                const width = activeSelection.offsetWidth;
+                const position = activeSelection.offsetLeft;
+                pillButtonHighlight.style.width = width + 'px';
+                pillButtonHighlight.style.left = position + 'px';
+            });
+        }
+    }
+    
+    // Set initial highlight position and width
+    updateHighlightDimensions();
+    
+    // Add click handler to entire pill button
+    pillButton.addEventListener('click', function(e) {
+        const rect = pillButton.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const midpoint = rect.width / 2;
+        
+        // Determine which side was clicked
+        if (clickX < midpoint) {
+            // Left side - Manual
+            if (!pillButtonManual.classList.contains('pill-button-selection_active')) {
+                toggleExecutionMode('manual');
+            }
+        } else {
+            // Right side - Auto
+            if (!pillButtonAuto.classList.contains('pill-button-selection_active')) {
+                toggleExecutionMode('auto');
+            }
+        }
+    });
+    
+    // Add resize handler to adjust highlight on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(updateHighlightDimensions, 50);
+    });
+    
+    // Add orientation change handler
+    window.addEventListener('orientationchange', function() {
+        setTimeout(updateHighlightDimensions, 100);
+    });
+    
+    // Use ResizeObserver for more reliable dimension updates
+    if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+            updateHighlightDimensions();
+        });
+        resizeObserver.observe(pillButton);
+        resizeObserver.observe(pillButtonManual);
+        resizeObserver.observe(pillButtonAuto);
+    }
+}
+
 // Initialize the display
 updateDisplay();
+initializePillButton();

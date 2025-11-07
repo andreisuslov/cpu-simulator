@@ -270,10 +270,13 @@ button:active {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .cpu-header h2 {
     margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 .mode-toggle {
@@ -281,50 +284,58 @@ button:active {
     align-items: center;
 }
 
-#modeToggleBtn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    color: #a0a0b0;
+/* Pill Button Styles */
+.pill-button {
+    display: inline-block;
+    position: relative;
+    padding: 3px 4px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     font-size: 13px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: none;
-    height: auto;
-    margin: 0;
-    border-radius: 12px;
-    width: auto;
-}
-
-#modeToggleBtn svg {
-    width: 18px;
-    height: 18px;
-    transition: transform 0.3s ease;
-}
-
-#modeToggleBtn:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(221, 132, 72, 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(221, 132, 72, 0.2);
+    border-radius: 28px;
+    color: #a0a0b0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    z-index: 0;
 }
 
-#modeToggleBtn.auto-active {
+.pill-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(221, 132, 72, 0.2);
+}
+
+.pill-button-input {
+    display: none;
+    visibility: hidden;
+}
+
+.pill-button-highlight {
+    transform: translate(0, -50%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    height: 28px;
     background: linear-gradient(135deg, #dd8448 0%, #c96d3a 100%);
-    border-color: rgba(221, 132, 72, 0.5);
-    color: white;
-    box-shadow: 0 4px 16px rgba(221, 132, 72, 0.3);
+    border-radius: 22px;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(221, 132, 72, 0.4);
 }
 
-#modeToggleBtn.auto-active:hover {
-    background: linear-gradient(135deg, #ffa366 0%, #dd8448 100%);
+.pill-button-selection {
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    z-index: 2;
+    font-weight: 600;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-#modeToggleBtn.auto-active svg {
-    transform: rotate(180deg);
+.pill-button-selection_active {
+    color: #ffffff;
 }
 
 .mode-controls {
@@ -789,21 +800,28 @@ td:nth-child(2).electric-active::before {
     }
     
     .cpu-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 12px;
         margin-bottom: 16px;
     }
     
     .mode-toggle {
-        width: 100%;
+        flex-shrink: 0;
     }
     
-    #modeToggleBtn {
-        width: 100%;
-        justify-content: center;
-        padding: 12px 16px;
-        font-size: 14px;
+    .pill-button {
+        font-size: 12px;
+        padding: 3px 4px;
+    }
+    
+    .pill-button-selection {
+        padding: 0.4em 0.8em;
+    }
+    
+    .pill-button-highlight {
+        height: 26px;
     }
     
     .register {
@@ -975,6 +993,19 @@ td:nth-child(2).electric-active::before {
         font-size: 20px;
         margin-bottom: 12px;
     }
+}
+
+/* Very narrow screens - stack header */
+@media screen and (max-width: 320px) {
+    .cpu-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .mode-toggle {
+        width: 100%;
+        justify-content: center;
+    }
     
     .register {
         padding: 10px;
@@ -992,14 +1023,16 @@ td:nth-child(2).electric-active::before {
         height: 40px;
     }
     
-    #modeToggleBtn {
-        padding: 10px 14px;
-        font-size: 13px;
+    .pill-button {
+        font-size: 11px;
     }
     
-    #modeToggleBtn svg {
-        width: 16px;
-        height: 16px;
+    .pill-button-selection {
+        padding: 0.35em 0.7em;
+    }
+    
+    .pill-button-highlight {
+        height: 24px;
     }
     
     .execution-phase {

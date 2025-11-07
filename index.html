@@ -14,13 +14,12 @@
                 <div class="cpu-header">
                     <h2>CPU</h2>
                     <div class="mode-toggle">
-                        <button id="modeToggleBtn" onclick="toggleExecutionMode()" title="Toggle Manual/Auto Mode">
-                            <span id="modeLabel">Manual</span>
-                            <svg id="toggleIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6m8.66-13.66l-4.24 4.24m-4.84 4.84l-4.24 4.24M23 12h-6m-6 0H1m18.66 8.66l-4.24-4.24m-4.84-4.84l-4.24-4.24"></path>
-                            </svg>
-                        </button>
+                        <input type="checkbox" id="pillButtonInput" class="pill-button-input">
+                        <span class="pill-button">
+                            <span class="pill-button-selection pill-button-selection_manual pill-button-selection_active">Manual</span>
+                            <span class="pill-button-selection pill-button-selection_auto">Auto</span>
+                            <span class="pill-button-highlight"></span>
+                        </span>
                     </div>
                 </div>
                 <div class="mode-controls">

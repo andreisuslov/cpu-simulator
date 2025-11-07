@@ -173,16 +173,12 @@ function updateRAMTable() {
             // Check if this RAM cell has changed and trigger electric animation
             const previousItem = previousRam.find(prev => prev.address === item.address);
             if (previousItem && previousItem.value !== item.value) {
-                // Apply electric effect to address, type, and value cells
-                row.cells[0].classList.add('electric-active');
-                row.cells[1].classList.add('electric-active');
-                row.cells[2].classList.add('electric-active');
+                // Apply electric effect to the entire row
+                row.classList.add('electric-active-row');
                 
                 // Remove the class after animation completes
                 setTimeout(() => {
-                    row.cells[0].classList.remove('electric-active');
-                    row.cells[1].classList.remove('electric-active');
-                    row.cells[2].classList.remove('electric-active');
+                    row.classList.remove('electric-active-row');
                 }, 1200);
             }
         }

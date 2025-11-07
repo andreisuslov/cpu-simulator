@@ -802,7 +802,9 @@ button:active {
 .ram-table-container {
     flex-grow: 1;
     overflow-y: auto;
+    overflow-x: visible;
     margin-top: 10px;
+    padding: 0 30px;
 }
 .ram-header {
     display: flex;
@@ -815,6 +817,8 @@ table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    position: relative;
+    overflow: visible;
 }
 
 thead {
@@ -844,6 +848,11 @@ td {
     font-size: 14px;
     color: #e0e0e0;
     transition: all 0.2s ease;
+}
+
+tbody {
+    position: relative;
+    z-index: 1;
 }
 
 tbody tr:hover td {
@@ -1074,9 +1083,11 @@ td .input-group {
 
 .register-value.electric-active {
   position: relative;
-  animation: electric-pulse 0.6s ease-in-out, turbulent-border 1.2s ease-in-out;
+  animation: electric-pulse 0.6s ease-in-out;
   border-width: 2px;
   border-style: solid;
+  border-radius: 8px;
+  border-color: var(--electric-border-color);
   background: linear-gradient(
     135deg,
     rgba(221, 132, 72, 0.05),
@@ -1098,66 +1109,66 @@ td .input-group {
     transparent,
     var(--electric-light-color)
   );
-  border-radius: 1px;
+  border-radius: 8px;
   opacity: 0.3;
   filter: blur(1px);
   z-index: -1;
   animation: electric-pulse 0.1s ease-in-out;
 }
 
-/* Apply electric border to RAM table cells */
-td.electric-active {
+/* Apply electric border to RAM table rows */
+tr.electric-active-row {
   position: relative;
-  animation: electric-pulse 0.1s ease-in-out, turbulent-border 0.2s ease-in-out;
-  border-width: 2px !important;
-  border-style: solid !important;
+}
+
+tr.electric-active-row td {
+  position: relative;
   background: linear-gradient(
     135deg,
     rgba(221, 132, 72, 0.05),
     transparent,
     rgba(221, 132, 72, 0.05)
   ) !important;
+  animation: electric-pulse 0.6s ease-in-out;
+  border-top: 2px solid var(--electric-border-color) !important;
+  border-bottom: 2px solid var(--electric-border-color) !important;
+  z-index: 2;
 }
 
-/* First column (address) - no right border */
-td:nth-child(1).electric-active {
-  border-right: none !important;
+/* First cell - add left border and rounded left corners */
+tr.electric-active-row td:first-child {
+  border-left: 2px solid var(--electric-border-color) !important;
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
 }
 
-/* Second column (value) - no left border */
-td:nth-child(2).electric-active {
-  border-left: none !important;
+/* Last cell - add right border and rounded right corners */
+tr.electric-active-row td:last-child {
+  border-right: 2px solid var(--electric-border-color) !important;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
 }
 
-td.electric-active::before {
+/* Create a single unified glow effect spanning the entire row */
+tr.electric-active-row::after {
   content: '';
   position: absolute;
-  top: -0.5px;
-  left: -0.5px;
-  right: -0.5px;
-  bottom: -0.5px;
-  background: linear-gradient(
-    135deg,
-    var(--electric-border-color),
-    transparent,
-    var(--electric-light-color)
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  background: radial-gradient(
+    ellipse,
+    rgba(221, 132, 72, 0.4) 0%,
+    rgba(255, 163, 102, 0.2) 40%,
+    transparent 70%
   );
-  border-radius: 0;
-  opacity: 0.3;
-  filter: blur(2px);
-  z-index: -1;
-  animation: electric-pulse 0.1s ease-in-out;
+  border-radius: 12px;
+  filter: blur(12px);
+  z-index: 1;
   pointer-events: none;
-}
-
-/* Adjust glow for first column - no right glow */
-td:nth-child(1).electric-active::before {
-  right: 0;
-}
-
-/* Adjust glow for second column - no left glow */
-td:nth-child(2).electric-active::before {
-  left: 0;
+  animation: electric-pulse 0.6s ease-in-out;
 }
 
 /* Mobile Responsive Styles */

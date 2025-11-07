@@ -164,6 +164,9 @@ h2 {
     font-weight: 600;
     color: #ffa366;
     white-space: nowrap;
+    line-height: 1;
+    display: flex;
+    align-items: center;
 }
 .register-value {
     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -539,9 +542,10 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
+    gap: 8px;
+    width: auto;
     height: 44px;
-    padding: 0;
+    padding: 0 16px;
     background: rgba(221, 132, 72, 0.2);
     border: 1px solid rgba(221, 132, 72, 0.3);
     border-radius: 12px;
@@ -554,8 +558,19 @@ input {
     box-shadow: 0 4px 16px rgba(221, 132, 72, 0.3);
 }
 .mode-switch button svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.mode-switch button span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffa366;
+    white-space: nowrap;
+    line-height: 1;
+    display: flex;
+    align-items: center;
 }
 .hidden {
     display: none;
@@ -961,13 +976,19 @@ td:nth-child(2).electric-active::before {
     }
     
     .mode-switch button {
-        width: 40px;
+        width: auto;
         height: 40px;
+        padding: 0 12px;
+        gap: 6px;
     }
     
     .mode-switch button svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .mode-switch button span {
+        font-size: 13px;
     }
     
     .ram-table-container {

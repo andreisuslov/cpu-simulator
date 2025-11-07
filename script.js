@@ -327,8 +327,20 @@ function toggleMode() {
     for (let col of editColumns) {
         col.classList.toggle('hidden', currentMode === 'display');
     }
-    document.getElementById('editIcon').classList.toggle('hidden', currentMode === 'edit');
-    document.getElementById('viewIcon').classList.toggle('hidden', currentMode === 'display');
+    
+    const modeText = document.getElementById('modeText');
+    const modeIcon = document.getElementById('modeIcon');
+    
+    if (currentMode === 'edit') {
+        // Switch to View mode
+        modeText.textContent = 'View';
+        modeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    } else {
+        // Switch to Modify mode
+        modeText.textContent = 'Modify';
+        modeIcon.innerHTML = '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>';
+    }
+    
     hasChanges = false;
     updateDisplay();
 }

@@ -51,13 +51,15 @@ function updateDisplay() {
     const phases = document.getElementById('execution-phases').children;
     for (const element of phases) {
         element.classList.remove('active-phase');
-        element.textContent = element.textContent.replace('► ', '');
+        const phaseText = element.getAttribute('data-phase');
+        element.childNodes[0].textContent = phaseText;
     }
-    const activePhase = Array.from(phases).find(phase => phase.textContent.includes(executionPhase));
+    const activePhase = Array.from(phases).find(phase => phase.getAttribute('data-phase') === executionPhase);
     activePhase.classList.add('active-phase');
-    activePhase.textContent = '► ' + activePhase.textContent;
+    activePhase.childNodes[0].textContent = '► ' + executionPhase;
 
     updateRAMTable();
+    updateTooltips();
 }
 
 function updateRAMTable() {
@@ -581,6 +583,598 @@ function initializePillButton() {
     }
 }
 
+// Function to generate tooltip content based on current state
+function getTooltipContent(phase) {
+    if (executionMode !== 'manual') {
+        return ''; // Only show tooltips in manual mode
+    }
+    
+    switch (phase) {
+        case 'Fetch':
+            if (executionPhase === 'Fetch') {
+                const nextInstruction = ram[pc]?.value || 'NIL';
+                return `The CPU is fetching the instruction from RAM address ${pc} (which is '${nextInstruction}') and loading it into the Instruction Register.`;
+            } else {
+                return 'The CPU fetches the next instruction from RAM, using the address in the Program Counter, and places it into the Instruction Register.';
+            }
+        
+        case 'Decode':
+            if (executionPhase === 'Decode') {
+                const [operation] = ir.split(' ');
+                return `The CPU is decoding the instruction '${ir}' in the Instruction Register to understand what operation it needs to perform.`;
+            } else {
+                return "The CPU decodes the instruction in the Instruction Register to understand what operation it needs to perform (e.g., 'LOAD', 'ADD', 'STORE').";
+            }
+        
+        case 'Execute':
+            if (executionPhase === 'Execute') {
+                const [operation, operand] = ir.split(' ');
+                let description = '';
+                
+                switch (operation) {
+                    case 'LOAD':
+                        description = `The CPU is executing the 'LOAD ${operand}' instruction. It's loading the value from RAM address ${operand} into the Accumulator.`;
+                        break;
+                    case 'ADD':
+                        description = `The CPU is executing the 'ADD ${operand}' instruction. It's adding the value from RAM address ${operand} to the current Accumulator value.`;
+                        break;
+                    case 'STORE':
+                        description = `The CPU is executing the 'STORE ${operand}' instruction. It's taking the value ${accumulator} from the Accumulator and storing it in RAM address ${operand}.`;
+                        break;
+                    case 'JUMP':
+                        description = `The CPU is executing the 'JUMP ${operand}' instruction. It's setting the Program Counter to ${operand} to continue execution from there.`;
+                        break;
+                    default:
+                        description = `The CPU is executing the '${ir}' instruction, carrying out the operation.`;
+                }
+                
+                return description;
+            } else {
+                return 'The CPU executes the instruction, carrying out the operation (like adding numbers or moving data between registers and RAM).';
+            }
+        
+        default:
+            return '';
+    }
+}
+
+// Function to generate Clock Tick button tooltip content
+function getClockTickTooltipContent() {
+    if (executionMode !== 'manual' && isAutoRunning && !isPaused) {
+        return 'Pause or stop Auto mode to use Clock Tick';
+    }
+    
+    if (executionMode !== 'manual') {
+        return 'Switch to Manual mode to use Clock Tick';
+    }
+    
+    let nextAction = '';
+    
+    switch (executionPhase) {
+        case 'Fetch':
+            const nextInstruction = ram[pc]?.value || 'NIL';
+            nextAction = `Fetch '${nextInstruction}' from RAM[${pc}] → IR`;
+            break;
+        
+        case 'Decode':
+            nextAction = `Decode '${ir}' → Execute`;
+            break;
+        
+        case 'Execute':
+            const [operation, operand] = ir.split(' ');
+            switch (operation) {
+                case 'LOAD':
+                    nextAction = `Execute: Load RAM[${operand}] → ACC, then PC=${(pc + 1) % ram.length}`;
+                    break;
+                case 'ADD':
+                    nextAction = `Execute: ACC + RAM[${operand}] → ACC, then PC=${(pc + 1) % ram.length}`;
+                    break;
+                case 'STORE':
+                    nextAction = `Execute: ACC → RAM[${operand}], then PC=${(pc + 1) % ram.length}`;
+                    break;
+                case 'JUMP':
+                    nextAction = `Execute: Jump to PC=${operand}`;
+                    break;
+                default:
+                    nextAction = `Execute '${ir}', then PC=${(pc + 1) % ram.length}`;
+            }
+            break;
+    }
+    
+    return nextAction;
+}
+
+// Function to generate Program Counter tooltip content
+function getPCTooltipContent() {
+    let status = '';
+    
+    // Show detailed tooltips in manual mode OR in auto mode when not actively running
+    const showDetailedTooltip = executionMode === 'manual' || !isAutoRunning || isPaused;
+    
+    if (showDetailedTooltip) {
+        const currentInstruction = ram[pc]?.value || 'NIL';
+        const currentType = ram[pc]?.type || 'unknown';
+        
+        if (executionPhase === 'Fetch') {
+            status = `Current address: ${pc}, pointing to RAM[${pc}] which contains '${currentInstruction}'. This instruction will be fetched into IR`;
+        } else if (executionPhase === 'Decode') {
+            const [operation, operand] = ir.split(' ');
+            
+            if (operation === 'JUMP') {
+                status = `Current address: ${pc}, will jump to address ${operand} after JUMP executes`;
+            } else {
+                const nextPC = (pc + 1) % ram.length;
+                const nextInstruction = ram[nextPC]?.value || 'NIL';
+                status = `Current address: ${pc}, will increment to ${nextPC} (pointing to '${nextInstruction}') after current instruction executes`;
+            }
+        } else if (executionPhase === 'Execute') {
+            const [operation, operand] = ir.split(' ');
+            
+            if (operation === 'JUMP') {
+                status = `Current address: ${pc}, jumping now to address ${operand}. Next instruction will be '${ram[parseInt(operand)]?.value || 'NIL'}'`;
+            } else if (operation === 'LOAD') {
+                const nextPC = (pc + 1) % ram.length;
+                const nextInstruction = ram[nextPC]?.value || 'NIL';
+                status = `Current address: ${pc}, will increment to ${nextPC} after LOAD completes. Next instruction: '${nextInstruction}'`;
+            } else if (operation === 'ADD') {
+                const nextPC = (pc + 1) % ram.length;
+                const nextInstruction = ram[nextPC]?.value || 'NIL';
+                status = `Current address: ${pc}, will increment to ${nextPC} after ADD completes. Next instruction: '${nextInstruction}'`;
+            } else if (operation === 'STORE') {
+                const nextPC = (pc + 1) % ram.length;
+                const nextInstruction = ram[nextPC]?.value || 'NIL';
+                status = `Current address: ${pc}, will increment to ${nextPC} after STORE completes. Next instruction: '${nextInstruction}'`;
+            } else {
+                const nextPC = (pc + 1) % ram.length;
+                status = `Current address: ${pc}, will increment to ${nextPC} after execution`;
+            }
+        } else {
+            status = `Current address: ${pc}, pointing to RAM[${pc}] which contains '${currentInstruction}'`;
+        }
+    } else {
+        const currentInstruction = ram[pc]?.value || 'NIL';
+        status = `Current address: ${pc}, pointing to RAM[${pc}] ('${currentInstruction}')`;
+    }
+    
+    return status;
+}
+
+// Function to generate Instruction Register tooltip content
+function getIRTooltipContent() {
+    let status = '';
+    
+    // Show detailed tooltips in manual mode OR in auto mode when not actively running
+    const showDetailedTooltip = executionMode === 'manual' || !isAutoRunning || isPaused;
+    
+    if (showDetailedTooltip) {
+        if (executionPhase === 'Fetch') {
+            const nextInstruction = ram[pc]?.value || 'NIL';
+            if (ir === 'NIL') {
+                status = `Current instruction: ${ir} (empty). Next: '${nextInstruction}' will be fetched from RAM[${pc}]`;
+            } else {
+                status = `Current instruction: '${ir}' (completed). Next: '${nextInstruction}' will be fetched from RAM[${pc}]`;
+            }
+        } else if (executionPhase === 'Decode') {
+            const [operation, operand] = ir.split(' ');
+            
+            if (operation === 'LOAD') {
+                const value = parseInt(ram[parseInt(operand)]?.value) || 0;
+                status = `Current instruction: '${ir}', being decoded. Will load value ${value} from RAM[${operand}] into ACC`;
+            } else if (operation === 'ADD') {
+                const value = parseInt(ram[parseInt(operand)]?.value) || 0;
+                status = `Current instruction: '${ir}', being decoded. Will add value ${value} from RAM[${operand}] to ACC`;
+            } else if (operation === 'STORE') {
+                status = `Current instruction: '${ir}', being decoded. Will store ACC value into RAM[${operand}]`;
+            } else if (operation === 'JUMP') {
+                status = `Current instruction: '${ir}', being decoded. Will jump to address ${operand}`;
+            } else {
+                status = `Current instruction: '${ir}', being decoded`;
+            }
+        } else if (executionPhase === 'Execute') {
+            const [operation, operand] = ir.split(' ');
+            
+            if (operation === 'LOAD') {
+                const value = parseInt(ram[parseInt(operand)]?.value) || 0;
+                status = `Current instruction: '${ir}', executing now. Loading ${value} from RAM[${operand}] → ACC`;
+            } else if (operation === 'ADD') {
+                const value = parseInt(ram[parseInt(operand)]?.value) || 0;
+                const result = accumulator + value;
+                status = `Current instruction: '${ir}', executing now. Adding: ACC ${accumulator} + RAM[${operand}] ${value} = ${result}`;
+            } else if (operation === 'STORE') {
+                status = `Current instruction: '${ir}', executing now. Storing ACC ${accumulator} → RAM[${operand}]`;
+            } else if (operation === 'JUMP') {
+                status = `Current instruction: '${ir}', executing now. Setting PC to ${operand}`;
+            } else {
+                status = `Current instruction: '${ir}', executing now`;
+            }
+        } else {
+            status = `Current instruction: '${ir}', holding the instruction being processed`;
+        }
+    } else {
+        status = `Current instruction: '${ir}', holding the instruction for CPU to execute`;
+    }
+    
+    return status;
+}
+
+// Function to generate Accumulator tooltip content
+function getAccumulatorTooltipContent() {
+    let status = `Current value: ${accumulator}`;
+    
+    // Show detailed tooltips in manual mode OR in auto mode when not actively running
+    const showDetailedTooltip = executionMode === 'manual' || !isAutoRunning || isPaused;
+    
+    // Only show next action during Execute phase when detailed tooltip is enabled
+    if (showDetailedTooltip && executionPhase === 'Execute') {
+        const [operation, operand] = ir.split(' ');
+        
+        switch (operation) {
+            case 'LOAD':
+                const loadValue = parseInt(ram[parseInt(operand)]?.value) || 0;
+                status = `Current value: ${accumulator}, which will be replaced. Next value: ${loadValue} (loaded from RAM[${operand}])`;
+                break;
+            case 'ADD':
+                const addValue = parseInt(ram[parseInt(operand)]?.value) || 0;
+                const result = accumulator + addValue;
+                // Handle the operator sign based on whether addValue is negative
+                const operator = addValue >= 0 ? '+' : '';
+                status = `Current value: ${accumulator}, which will be added to RAM[${operand}]. Next value is ${result} (ACC ${accumulator} ${operator} RAM[${operand}] ${addValue})`;
+                break;
+            case 'STORE':
+                status = `Current value: ${accumulator}, which will be stored into RAM[${operand}]. ACC remains ${accumulator}`;
+                break;
+            case 'JUMP':
+                status = `Current value: ${accumulator}, which remains unchanged (JUMP doesn't affect ACC)`;
+                break;
+            default:
+                status += '';
+        }
+    } else if (showDetailedTooltip) {
+        // Dynamic messages based on current phase and instruction
+        if (executionPhase === 'Fetch') {
+            const nextInstruction = ram[pc]?.value || 'NIL';
+            const [nextOp] = nextInstruction.split(' ');
+            
+            if (nextOp === 'LOAD' || nextOp === 'ADD') {
+                status = `Current value: ${accumulator}, waiting for instruction '${nextInstruction}' to be fetched and executed`;
+            } else if (nextOp === 'STORE') {
+                status = `Current value: ${accumulator}, ready to be stored when instruction '${nextInstruction}' executes`;
+            } else {
+                status = `Current value: ${accumulator}, holding result from previous operations`;
+            }
+        } else if (executionPhase === 'Decode') {
+            const [operation, operand] = ir.split(' ');
+            
+            if (operation === 'LOAD') {
+                status = `Current value: ${accumulator}, will be replaced when LOAD executes`;
+            } else if (operation === 'ADD') {
+                status = `Current value: ${accumulator}, will be added to RAM[${operand}] when ADD executes`;
+            } else if (operation === 'STORE') {
+                status = `Current value: ${accumulator}, will be stored to RAM[${operand}] when STORE executes`;
+            } else {
+                status = `Current value: ${accumulator}, unaffected by current instruction`;
+            }
+        } else {
+            status = `Current value: ${accumulator}, holding result from previous operations`;
+        }
+    } else {
+        status = `Current value: ${accumulator}, holding temporary data for CPU operations`;
+    }
+    
+    return status;
+}
+
+// Function to update all tooltips
+function updateTooltips() {
+    const phases = document.querySelectorAll('.execution-phase');
+    phases.forEach(phaseElement => {
+        const phase = phaseElement.getAttribute('data-phase');
+        const tooltip = phaseElement.querySelector('.phase-tooltip');
+        if (tooltip) {
+            tooltip.textContent = getTooltipContent(phase);
+        }
+    });
+    
+    // Update Clock Tick button tooltip
+    const buttonTooltip = document.querySelector('.button-tooltip');
+    if (buttonTooltip) {
+        buttonTooltip.textContent = getClockTickTooltipContent();
+    }
+    
+    // Update Program Counter tooltip
+    const pcTooltip = document.querySelector('.pc-tooltip');
+    if (pcTooltip) {
+        pcTooltip.textContent = getPCTooltipContent();
+    }
+    
+    // Update Instruction Register tooltip
+    const irTooltip = document.querySelector('.ir-tooltip');
+    if (irTooltip) {
+        irTooltip.textContent = getIRTooltipContent();
+    }
+    
+    // Update Accumulator tooltip
+    const accumulatorTooltip = document.querySelector('.accumulator-tooltip');
+    if (accumulatorTooltip) {
+        accumulatorTooltip.textContent = getAccumulatorTooltipContent();
+    }
+}
+
+// Initialize touch event handlers for mobile tooltips
+function initializeTooltips() {
+    const phases = document.querySelectorAll('.execution-phase');
+    const buttonWrapper = document.querySelector('.button-wrapper');
+    
+    phases.forEach(phaseElement => {
+        // Touch event for mobile
+        phaseElement.addEventListener('touchstart', function(e) {
+            // Don't show tooltips if auto mode is actively running
+            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+            
+            // Remove show-tooltip from all phases
+            phases.forEach(p => p.classList.remove('show-tooltip'));
+            
+            // Add show-tooltip to this phase
+            this.classList.add('show-tooltip');
+            
+            // Remove tooltip after 3 seconds
+            setTimeout(() => {
+                this.classList.remove('show-tooltip');
+            }, 3000);
+        });
+        
+        // Click event to toggle tooltip on mobile
+        phaseElement.addEventListener('click', function(e) {
+            // Don't show tooltips if auto mode is actively running
+            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+            
+            // Check if it's a touch device
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                e.preventDefault();
+                
+                // Toggle tooltip
+                const isShowing = this.classList.contains('show-tooltip');
+                
+                // Remove from all
+                phases.forEach(p => p.classList.remove('show-tooltip'));
+                
+                // Add to this one if it wasn't showing
+                if (!isShowing) {
+                    this.classList.add('show-tooltip');
+                    
+                    // Auto-hide after 3 seconds
+                    setTimeout(() => {
+                        this.classList.remove('show-tooltip');
+                    }, 3000);
+                }
+            }
+        });
+    });
+    
+    // Button tooltip touch handler
+    if (buttonWrapper) {
+        let buttonTooltipTimeout;
+        
+        buttonWrapper.addEventListener('touchstart', function(e) {
+            // Don't show tooltips if auto mode is actively running
+            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+            
+            // Don't prevent default - let the button click work
+            // Just show the tooltip
+            this.classList.add('show-tooltip');
+            
+            // Clear any existing timeout
+            clearTimeout(buttonTooltipTimeout);
+            
+            // Auto-hide after 3 seconds
+            buttonTooltipTimeout = setTimeout(() => {
+                this.classList.remove('show-tooltip');
+            }, 3000);
+        });
+        
+        // Also handle long press on button
+        let pressTimer;
+        const clockTickBtn = document.getElementById('clockTick');
+        
+        if (clockTickBtn) {
+            clockTickBtn.addEventListener('mousedown', function(e) {
+                // Don't show tooltips if auto mode is actively running
+                if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+                
+                // Only for non-touch devices
+                if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) {
+                    pressTimer = setTimeout(() => {
+                        buttonWrapper.classList.add('show-tooltip');
+                        
+                        setTimeout(() => {
+                            buttonWrapper.classList.remove('show-tooltip');
+                        }, 3000);
+                    }, 700);
+                }
+            });
+            
+            clockTickBtn.addEventListener('mouseup', function() {
+                clearTimeout(pressTimer);
+            });
+            
+            clockTickBtn.addEventListener('mouseleave', function() {
+                clearTimeout(pressTimer);
+            });
+        }
+    }
+    
+    // Program Counter tooltip touch handler
+    const pcWrapper = document.querySelector('.pc-wrapper');
+    if (pcWrapper) {
+        let pcTooltipTimeout;
+        
+        pcWrapper.addEventListener('touchstart', function(e) {
+            // Show the tooltip
+            this.classList.add('show-tooltip');
+            
+            // Clear any existing timeout
+            clearTimeout(pcTooltipTimeout);
+            
+            // Auto-hide after 3 seconds
+            pcTooltipTimeout = setTimeout(() => {
+                this.classList.remove('show-tooltip');
+            }, 3000);
+        });
+        
+        // Click handler for mobile
+        pcWrapper.addEventListener('click', function(e) {
+            // Check if it's a touch device
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                e.preventDefault();
+                
+                // Toggle tooltip
+                const isShowing = this.classList.contains('show-tooltip');
+                
+                // Remove from all
+                phases.forEach(p => p.classList.remove('show-tooltip'));
+                if (buttonWrapper) {
+                    buttonWrapper.classList.remove('show-tooltip');
+                }
+                
+                // Add to this one if it wasn't showing
+                if (!isShowing) {
+                    this.classList.add('show-tooltip');
+                    
+                    // Auto-hide after 3 seconds
+                    clearTimeout(pcTooltipTimeout);
+                    pcTooltipTimeout = setTimeout(() => {
+                        this.classList.remove('show-tooltip');
+                    }, 3000);
+                }
+            }
+        });
+    }
+    
+    // Instruction Register tooltip touch handler
+    const irWrapper = document.querySelector('.ir-wrapper');
+    if (irWrapper) {
+        let irTooltipTimeout;
+        
+        irWrapper.addEventListener('touchstart', function(e) {
+            // Show the tooltip
+            this.classList.add('show-tooltip');
+            
+            // Clear any existing timeout
+            clearTimeout(irTooltipTimeout);
+            
+            // Auto-hide after 3 seconds
+            irTooltipTimeout = setTimeout(() => {
+                this.classList.remove('show-tooltip');
+            }, 3000);
+        });
+        
+        // Click handler for mobile
+        irWrapper.addEventListener('click', function(e) {
+            // Check if it's a touch device
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                e.preventDefault();
+                
+                // Toggle tooltip
+                const isShowing = this.classList.contains('show-tooltip');
+                
+                // Remove from all
+                phases.forEach(p => p.classList.remove('show-tooltip'));
+                if (buttonWrapper) {
+                    buttonWrapper.classList.remove('show-tooltip');
+                }
+                
+                // Add to this one if it wasn't showing
+                if (!isShowing) {
+                    this.classList.add('show-tooltip');
+                    
+                    // Auto-hide after 3 seconds
+                    clearTimeout(irTooltipTimeout);
+                    irTooltipTimeout = setTimeout(() => {
+                        this.classList.remove('show-tooltip');
+                    }, 3000);
+                }
+            }
+        });
+    }
+    
+    // Accumulator tooltip touch handler
+    const accumulatorWrapper = document.querySelector('.accumulator-wrapper');
+    if (accumulatorWrapper) {
+        let accTooltipTimeout;
+        
+        accumulatorWrapper.addEventListener('touchstart', function(e) {
+            // Don't show tooltip if clicking the reset button
+            if (e.target.closest('.reset-btn')) return;
+            
+            // Show the tooltip
+            this.classList.add('show-tooltip');
+            
+            // Clear any existing timeout
+            clearTimeout(accTooltipTimeout);
+            
+            // Auto-hide after 3 seconds
+            accTooltipTimeout = setTimeout(() => {
+                this.classList.remove('show-tooltip');
+            }, 3000);
+        });
+        
+        // Click handler for mobile
+        accumulatorWrapper.addEventListener('click', function(e) {
+            // Don't show tooltip if clicking the reset button
+            if (e.target.closest('.reset-btn')) return;
+            
+            // Check if it's a touch device
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                e.preventDefault();
+                
+                // Toggle tooltip
+                const isShowing = this.classList.contains('show-tooltip');
+                
+                // Remove from all
+                phases.forEach(p => p.classList.remove('show-tooltip'));
+                if (buttonWrapper) {
+                    buttonWrapper.classList.remove('show-tooltip');
+                }
+                
+                // Add to this one if it wasn't showing
+                if (!isShowing) {
+                    this.classList.add('show-tooltip');
+                    
+                    // Auto-hide after 3 seconds
+                    clearTimeout(accTooltipTimeout);
+                    accTooltipTimeout = setTimeout(() => {
+                        this.classList.remove('show-tooltip');
+                    }, 3000);
+                }
+            }
+        });
+    }
+    
+    // Close tooltips when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.execution-phase') && 
+            !e.target.closest('.button-wrapper') && 
+            !e.target.closest('.pc-wrapper') &&
+            !e.target.closest('.ir-wrapper') &&
+            !e.target.closest('.accumulator-wrapper')) {
+            phases.forEach(p => p.classList.remove('show-tooltip'));
+            if (buttonWrapper) {
+                buttonWrapper.classList.remove('show-tooltip');
+            }
+            if (pcWrapper) {
+                pcWrapper.classList.remove('show-tooltip');
+            }
+            if (irWrapper) {
+                irWrapper.classList.remove('show-tooltip');
+            }
+            if (accumulatorWrapper) {
+                accumulatorWrapper.classList.remove('show-tooltip');
+            }
+        }
+    });
+}
+
 // Initialize the display
 updateDisplay();
 initializePillButton();
+initializeTooltips();

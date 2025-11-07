@@ -225,6 +225,8 @@ h2 {
     flex: 1;
     display: flex;
     align-items: center;
+    position: relative;
+    cursor: pointer;
 }
 
 .execution-phase:last-child {
@@ -237,6 +239,356 @@ h2 {
     border-color: rgba(221, 132, 72, 0.4);
     color: #ffa366;
     box-shadow: 0 0 20px rgba(221, 132, 72, 0.2);
+}
+
+/* Tooltip Styles */
+.phase-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #e0e0e0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    max-width: 300px;
+    min-width: 250px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(221, 132, 72, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 400;
+    text-align: left;
+}
+
+.phase-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(20, 20, 35, 0.98);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Desktop: Show tooltip on hover after 0.7s delay */
+@media (hover: hover) and (pointer: fine) {
+    .execution-phase:hover .phase-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+        transition-delay: 0.7s;
+    }
+    
+    .execution-phase:hover .phase-tooltip::before {
+        transition-delay: 0.7s;
+    }
+}
+
+/* Mobile: Show tooltip on touch/tap */
+@media (hover: none) and (pointer: coarse) {
+    .execution-phase.show-tooltip .phase-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* Adjust tooltip position on small screens */
+@media screen and (max-width: 768px) {
+    .phase-tooltip {
+        max-width: 250px;
+        min-width: 200px;
+        font-size: 12px;
+        padding: 10px 14px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) scale(0.95);
+    }
+    
+    .phase-tooltip::before {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+    }
+    
+    @media (hover: none) and (pointer: coarse) {
+        .execution-phase.show-tooltip .phase-tooltip {
+            transform: translateX(-50%) scale(1);
+        }
+    }
+}
+
+/* Button Tooltip Styles */
+.button-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.button-tooltip {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 12px);
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #e0e0e0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    max-width: 280px;
+    min-width: 240px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(221, 132, 72, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 400;
+    text-align: center;
+}
+
+.button-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: rgba(20, 20, 35, 0.98);
+    filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Desktop: Show button tooltip on hover after 0.7s delay */
+@media (hover: hover) and (pointer: fine) {
+    .button-wrapper:hover .button-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+        transition-delay: 0.7s;
+    }
+    
+    .button-wrapper:hover .button-tooltip::before {
+        transition-delay: 0.7s;
+    }
+}
+
+/* Mobile: Show button tooltip on touch/tap */
+@media (hover: none) and (pointer: coarse) {
+    .button-wrapper.show-tooltip .button-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* Accumulator Tooltip Styles */
+.accumulator-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.accumulator-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #e0e0e0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    max-width: 280px;
+    min-width: 220px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(221, 132, 72, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 400;
+    text-align: center;
+}
+
+.accumulator-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(20, 20, 35, 0.98);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Desktop: Show accumulator tooltip on hover after 0.7s delay */
+@media (hover: hover) and (pointer: fine) {
+    .accumulator-wrapper:hover .accumulator-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+        transition-delay: 0.7s;
+    }
+    
+    .accumulator-wrapper:hover .accumulator-tooltip::before {
+        transition-delay: 0.7s;
+    }
+}
+
+/* Mobile: Show accumulator tooltip on touch/tap */
+@media (hover: none) and (pointer: coarse) {
+    .accumulator-wrapper.show-tooltip .accumulator-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* Instruction Register Tooltip Styles */
+.ir-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.ir-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #e0e0e0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    max-width: 300px;
+    min-width: 240px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(221, 132, 72, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 400;
+    text-align: center;
+}
+
+.ir-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(20, 20, 35, 0.98);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Desktop: Show IR tooltip on hover after 0.7s delay */
+@media (hover: hover) and (pointer: fine) {
+    .ir-wrapper:hover .ir-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+        transition-delay: 0.7s;
+    }
+    
+    .ir-wrapper:hover .ir-tooltip::before {
+        transition-delay: 0.7s;
+    }
+}
+
+/* Mobile: Show IR tooltip on touch/tap */
+@media (hover: none) and (pointer: coarse) {
+    .ir-wrapper.show-tooltip .ir-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* Program Counter Tooltip Styles */
+.pc-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.pc-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #e0e0e0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: normal;
+    max-width: 300px;
+    min-width: 240px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(221, 132, 72, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 1000;
+    font-weight: 400;
+    text-align: center;
+}
+
+.pc-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: rgba(20, 20, 35, 0.98);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Desktop: Show PC tooltip on hover after 0.7s delay */
+@media (hover: hover) and (pointer: fine) {
+    .pc-wrapper:hover .pc-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+        transition-delay: 0.7s;
+    }
+    
+    .pc-wrapper:hover .pc-tooltip::before {
+        transition-delay: 0.7s;
+    }
+}
+
+/* Mobile: Show PC tooltip on touch/tap */
+@media (hover: none) and (pointer: coarse) {
+    .pc-wrapper.show-tooltip .pc-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) scale(1);
+    }
 }
 button {
     padding: 14px 24px;
@@ -1049,6 +1401,34 @@ td:nth-child(2).electric-active::before {
     
     .explanation ul, .explanation ol {
         padding-left: 20px;
+    }
+    
+    .button-tooltip {
+        max-width: 240px;
+        min-width: 200px;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .accumulator-tooltip {
+        max-width: 240px;
+        min-width: 200px;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .ir-tooltip {
+        max-width: 250px;
+        min-width: 200px;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+    
+    .pc-tooltip {
+        max-width: 250px;
+        min-width: 200px;
+        font-size: 12px;
+        padding: 10px 14px;
     }
 }
 

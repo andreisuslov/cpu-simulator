@@ -24,7 +24,10 @@
                 </div>
                 <div class="mode-controls">
                     <div id="manualControls" class="control-group">
-                        <button id="clockTick" onclick="clockTick()">Clock Tick</button>
+                        <div class="button-wrapper">
+                            <button id="clockTick" onclick="clockTick()">Clock Tick</button>
+                            <div class="button-tooltip"></div>
+                        </div>
                     </div>
                     <div id="autoControls" class="control-group hidden">
                         <div class="interval-control">
@@ -39,24 +42,35 @@
                     </div>
                 </div>
                 <div class="top-row">
-                    <div class="register">
+                    <div class="register pc-wrapper">
                         <h3>Program Counter</h3>
                         <div id="pc" class="register-value">0</div>
+                        <div class="pc-tooltip"></div>
                     </div>
-                    <div class="register">
+                    <div class="register ir-wrapper">
                         <h3>Instruction Register</h3>
                         <div id="ir" class="register-value">NIL</div>
+                        <div class="ir-tooltip"></div>
                     </div>
                 </div>
                 <div class="bottom-row">
                     <div class="register">
                         <div id="execution-phases">
-                            <div class="execution-phase active-phase">► Fetch</div>
-                            <div class="execution-phase">Decode</div>
-                            <div class="execution-phase">Execute</div>
+                            <div class="execution-phase active-phase" data-phase="Fetch">
+                                ► Fetch
+                                <div class="phase-tooltip"></div>
+                            </div>
+                            <div class="execution-phase" data-phase="Decode">
+                                Decode
+                                <div class="phase-tooltip"></div>
+                            </div>
+                            <div class="execution-phase" data-phase="Execute">
+                                Execute
+                                <div class="phase-tooltip"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="register">
+                    <div class="register accumulator-wrapper">
                         <div class="register-header">
                             <h3>Accumulator</h3>
                             <button class="reset-btn" onclick="resetAccumulator()" title="Reset Accumulator">
@@ -70,6 +84,7 @@
                             </button>
                         </div>
                         <div id="accumulator" class="register-value">0</div>
+                        <div class="accumulator-tooltip"></div>
                     </div>
                 </div>
             </div>

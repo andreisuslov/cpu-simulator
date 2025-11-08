@@ -517,8 +517,12 @@ function stopAuto() {
     document.getElementById('intervalInput').disabled = false;
 }
 
-function resetAccumulator() {
+function resetCPU() {
+    pc = 0;
+    previousPc = 0;
+    ir = 'NIL';
     accumulator = 0;
+    executionPhase = 'Fetch';
     updateDisplay();
 }
 

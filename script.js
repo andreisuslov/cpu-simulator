@@ -24,7 +24,7 @@ let currentIntervalMs = 0;
 let targetIntervalMs = 0;
 let accelerationSteps = 10; // Number of steps to reach target speed
 
-const instructions = ['', 'LOAD', 'ADD', 'STORE', 'JUMP'];
+const instructions = ['LOAD', 'ADD', 'STORE', 'JUMP'];
 
 function updateDisplay() {
     const pcElement = document.getElementById('pc');
@@ -500,6 +500,9 @@ function pauseAuto() {
         }
         document.getElementById('pauseBtn').textContent = 'Resume';
         document.getElementById('intervalInput').disabled = false;
+        
+        // Update tooltips after pausing
+        updateTooltips();
     }
 }
 
@@ -515,6 +518,9 @@ function stopAuto() {
     document.getElementById('runningControls').classList.add('hidden');
     document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('intervalInput').disabled = false;
+    
+    // Update tooltips after stopping
+    updateTooltips();
 }
 
 function resetCPU() {
@@ -599,8 +605,9 @@ function initializePillButton() {
 
 // Function to generate tooltip content based on current state
 function getTooltipContent(phase) {
-    if (executionMode !== 'manual') {
-        return ''; // Only show tooltips in manual mode
+    // Show tooltips in manual mode OR in auto mode when paused/stopped
+    if (executionMode === 'auto' && isAutoRunning && !isPaused) {
+        return ''; // Don't show tooltips only when auto mode is actively running
     }
     
     switch (phase) {
@@ -914,6 +921,54 @@ function updateTooltips() {
     }
 }
 
+// Function to adjust tooltip position to stay within viewport
+function adjustTooltipPosition(tooltip) {
+    if (!tooltip) return;
+    
+    // Reset any position adjustments
+    tooltip.style.left = '';
+    tooltip.style.right = '';
+    tooltip.style.bottom = '';
+    tooltip.style.top = '';
+    tooltip.style.transform = '';
+    tooltip.classList.remove('tooltip-below');
+    
+    // Get tooltip and viewport dimensions
+    setTimeout(() => {
+        const rect = tooltip.getBoundingClientRect();
+        const parentRect = tooltip.parentElement.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const padding = 10;
+        
+        let transformX = '-50%';
+        let transformY = '0';
+        
+        // Check horizontal overflow
+        if (rect.right > viewportWidth - padding) {
+            const overflow = rect.right - (viewportWidth - padding);
+            transformX = `calc(-50% - ${overflow}px)`;
+        } else if (rect.left < padding) {
+            const overflow = padding - rect.left;
+            transformX = `calc(-50% + ${overflow}px)`;
+        }
+        
+        // Check vertical overflow - if tooltip goes above viewport, show it below instead
+        if (rect.top < padding) {
+            tooltip.style.bottom = 'auto';
+            tooltip.style.top = 'calc(100% + 12px)';
+            
+            // Adjust arrow to point up
+            const arrow = window.getComputedStyle(tooltip, '::before');
+            if (arrow) {
+                tooltip.classList.add('tooltip-below');
+            }
+        }
+        
+        tooltip.style.transform = `translateX(${transformX}) translateY(${transformY}) scale(1)`;
+    }, 10);
+}
+
 // Initialize touch event handlers for mobile tooltips
 function initializeTooltips() {
     const phases = document.querySelectorAll('.execution-phase');
@@ -930,6 +985,10 @@ function initializeTooltips() {
             
             // Add show-tooltip to this phase
             this.classList.add('show-tooltip');
+            
+            // Adjust tooltip position to stay within viewport
+            const tooltip = this.querySelector('.phase-tooltip');
+            adjustTooltipPosition(tooltip);
             
             // Remove tooltip after 3 seconds
             setTimeout(() => {
@@ -955,6 +1014,10 @@ function initializeTooltips() {
                 // Add to this one if it wasn't showing
                 if (!isShowing) {
                     this.classList.add('show-tooltip');
+                    
+                    // Adjust tooltip position to stay within viewport
+                    const tooltip = this.querySelector('.phase-tooltip');
+                    adjustTooltipPosition(tooltip);
                     
                     // Auto-hide after 3 seconds
                     setTimeout(() => {

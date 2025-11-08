@@ -187,17 +187,29 @@ function updateRAMTable() {
     // Update previousRam after checking for changes
     previousRam = ram.map(item => ({ ...item }));
     
-    // Add a single Save button for all changes
+    // Add a single Save button for all changes (in the RAM header)
+    const modeSwitch = document.querySelector('.mode-switch');
+    let saveButton = document.getElementById('saveAllButton');
+    
     if (currentMode === 'edit') {
-        const saveButtonRow = ramTable.insertRow();
-        const saveButtonCell = saveButtonRow.insertCell(0);
-        saveButtonCell.colSpan = 3;
-        const saveButton = document.createElement('button');
-        saveButton.textContent = 'Save All Changes';
-        saveButton.onclick = saveAllChanges;
-        saveButton.id = 'saveAllButton';
-        saveButton.style.display = hasChanges ? 'block' : 'none';
-        saveButtonCell.appendChild(saveButton);
+        if (!saveButton) {
+            saveButton = document.createElement('button');
+            saveButton.textContent = 'Save All Changes';
+            saveButton.onclick = saveAllChanges;
+            saveButton.id = 'saveAllButton';
+            saveButton.className = 'save-changes-btn';
+            // Insert before the mode toggle button
+            modeSwitch.insertBefore(saveButton, modeSwitch.firstChild);
+        }
+        saveButton.style.display = 'inline-flex';
+        saveButton.disabled = !hasChanges;
+        saveButton.style.opacity = hasChanges ? '1' : '0.5';
+        saveButton.style.cursor = hasChanges ? 'pointer' : 'not-allowed';
+    } else {
+        // Remove save button when not in edit mode
+        if (saveButton) {
+            saveButton.remove();
+        }
     }
 }
 
@@ -244,7 +256,9 @@ function checkForChanges() {
     
     const saveButton = document.getElementById('saveAllButton');
     if (saveButton) {
-        saveButton.style.display = hasChanges ? 'block' : 'none';
+        saveButton.disabled = !hasChanges;
+        saveButton.style.opacity = hasChanges ? '1' : '0.5';
+        saveButton.style.cursor = hasChanges ? 'pointer' : 'not-allowed';
     }
 }
 

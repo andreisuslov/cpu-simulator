@@ -122,6 +122,7 @@ h2 {
     display: flex;
     gap: 12px;
     align-items: center;
+    justify-content: center;
     width: 100%;
 }
 
@@ -606,7 +607,6 @@ h2 {
 }
 button {
     padding: 14px 24px;
-    margin-top: 10px;
     background: linear-gradient(135deg, #dd8448 0%, #c96d3a 100%);
     color: white;
     border: none;
@@ -617,7 +617,6 @@ button {
     width: 100%;
     box-sizing: border-box;
     height: 48px;
-    /* margin-bottom: 5px; */
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(221, 132, 72, 0.3);
     position: relative;

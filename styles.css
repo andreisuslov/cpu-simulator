@@ -1402,7 +1402,7 @@ tr.electric-active-row::after {
     }
     
     .running-controls {
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
     }
     

@@ -16,7 +16,7 @@ describe('Smoke Test: Responsive Layout', () => {
   })
 
   it('should maintain container max-height', () => {
-    cy.get('.container').should('have.css', 'max-height')
+    cy.get('.container').should('have.css', 'max-height', '900px')
   })
 
   it('should have scrollable RAM table', () => {

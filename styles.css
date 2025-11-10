@@ -41,8 +41,10 @@ body {
     -ms-user-select: none;
 }
 .container {
-    width: auto;
+    width: 100%;
+    height: 100%;
     max-width: 1400px;
+    max-height: 900px;
     background: rgba(26, 26, 46, 0.7);
     backdrop-filter: blur(20px);
     border-radius: 24px;
@@ -51,12 +53,15 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .simulator {
     display: flex;
     height: auto;
-    max-height: 700px;
+    max-height: 900px;
+    min-height: 750px;
     gap: 2px;
+    overflow: hidden;
 }
 .cpu, .ram {
     resize: both;
@@ -85,6 +90,7 @@ h2 {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -0.5px;
+    flex-shrink: 0;
 }
 .register {
     background: rgba(255, 255, 255, 0.03);
@@ -198,6 +204,7 @@ h2 {
     display: flex;
     gap: 12px;
     align-items: stretch;
+    flex-shrink: 0;
 }
 
 .top-row .register {
@@ -209,6 +216,7 @@ h2 {
     display: flex;
     gap: 12px;
     align-items: stretch;
+    flex-shrink: 0;
 }
 
 #execution-phases {
@@ -677,6 +685,7 @@ button:active {
     margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 12px;
+    flex-shrink: 0;
 }
 
 .cpu-header h2 {
@@ -745,6 +754,7 @@ button:active {
 
 .mode-controls {
     margin-bottom: 20px;
+    flex-shrink: 0;
 }
 
 .control-group {
@@ -826,10 +836,14 @@ button:active {
 }
 .ram-table-container {
     flex-grow: 1;
+    flex-shrink: 1;
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: auto;
     margin-top: 10px;
     padding: 0 10px;
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
 }
 .ram-header {
     display: flex;
@@ -837,14 +851,15 @@ button:active {
     justify-content: space-between; /* Spreads out items evenly with space between */
     flex-wrap: wrap;
     gap: 12px;
+    flex-shrink: 0;
 }
 table {
     width: 100%;
+    min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     position: relative;
-    overflow: visible;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 thead {
@@ -860,21 +875,25 @@ th, td {
     padding: 4px 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     box-sizing: border-box;
-    height: 46px; /* Fixed height to prevent expansion */
+    height: 46px;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
-/* Fixed column widths */
+/* Column widths in display mode (3 columns) */
 th:nth-child(1), td:nth-child(1) {
-    width: 20%;
+    width: 15%;
+    min-width: 60px;
 }
 
 th:nth-child(2), td:nth-child(2) {
-    width: 30%;
+    width: 25%;
+    min-width: 100px;
 }
 
 th:nth-child(3), td:nth-child(3) {
-    width: 50%;
+    width: 60%;
+    min-width: 120px;
 }
 
 th {
@@ -890,9 +909,6 @@ td {
     font-size: 14px;
     color: #e0e0e0;
     transition: all 0.2s ease;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 tbody {
@@ -1081,17 +1097,11 @@ td .input-group {
 .type-instruction {
     color: #ffa366;
     font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .type-data {
     color: #66b3ff;
     font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* Save button styling - positioned in RAM header */
@@ -1123,6 +1133,37 @@ td .input-group {
 .save-changes-btn:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+/* Cancel button styling */
+.cancel-changes-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    height: 44px;
+    padding: 0 16px;
+    margin: 0;
+    background: rgba(201, 72, 72, 0.2);
+    border: 1px solid rgba(201, 72, 72, 0.3);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ff6666;
+    white-space: nowrap;
+}
+
+.cancel-changes-btn:hover {
+    background: rgba(201, 72, 72, 0.3);
+    border-color: rgba(201, 72, 72, 0.5);
+    box-shadow: 0 4px 16px rgba(201, 72, 72, 0.3);
+}
+
+.cancel-changes-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(201, 72, 72, 0.3);
 }
 
 /* Electric border animation for counter */
@@ -1289,7 +1330,7 @@ tr.electric-active-row::after {
     
     .simulator {
         flex-direction: column;
-        max-height: none;
+        height: auto;
         gap: 0;
     }
     
@@ -1645,11 +1686,113 @@ tr.electric-active-row::after {
     }
 }
 
+/* Add/Remove Row Button Styles */
+.actions-cell {
+    text-align: center;
+    padding: 4px !important;
+}
+
+.remove-row-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: rgba(201, 72, 72, 0.2);
+    border: 1px solid rgba(201, 72, 72, 0.3);
+    border-radius: 8px;
+    color: #ff6666;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-row-btn:hover {
+    background: rgba(201, 72, 72, 0.3);
+    border-color: rgba(201, 72, 72, 0.5);
+    box-shadow: 0 2px 8px rgba(201, 72, 72, 0.3);
+    transform: scale(1.05);
+}
+
+.remove-row-btn:active {
+    transform: scale(0.95);
+}
+
+.add-row-row {
+    background: transparent !important;
+}
+
+.add-row-row td {
+    border-bottom: none !important;
+    padding: 8px 4px !important;
+}
+
+.add-row-btn {
+    width: 100%;
+    height: 40px;
+    padding: 0 16px;
+    background: rgba(76, 175, 80, 0.15);
+    border: 1px dashed rgba(76, 175, 80, 0.3);
+    border-radius: 8px;
+    color: #81c784;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.add-row-btn:hover {
+    background: rgba(76, 175, 80, 0.25);
+    border-color: rgba(76, 175, 80, 0.5);
+    border-style: solid;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.add-row-btn:active {
+    transform: scale(0.98);
+}
+
+/* Column widths in edit mode (4 columns) */
+th.edit-column:not(.hidden),
+td:nth-child(4) {
+    width: 12%;
+    min-width: 50px;
+}
+
+/* Adjust other columns when in edit mode */
+tbody:has(td:nth-child(4)) ~ thead th:nth-child(1),
+thead:has(th.edit-column:not(.hidden)) th:nth-child(1),
+tbody tr:has(td:nth-child(4)) td:nth-child(1) {
+    width: 12%;
+    min-width: 50px;
+}
+
+tbody:has(td:nth-child(4)) ~ thead th:nth-child(2),
+thead:has(th.edit-column:not(.hidden)) th:nth-child(2),
+tbody tr:has(td:nth-child(4)) td:nth-child(2) {
+    width: 23%;
+    min-width: 100px;
+}
+
+tbody:has(td:nth-child(4)) ~ thead th:nth-child(3),
+thead:has(th.edit-column:not(.hidden)) th:nth-child(3),
+tbody tr:has(td:nth-child(4)) td:nth-child(3) {
+    width: 53%;
+    min-width: 150px;
+}
+
 /* Landscape orientation on mobile */
 @media screen and (max-width: 768px) and (orientation: landscape) {
     .simulator {
         flex-direction: row;
-        max-height: none;
+        height: auto;
     }
     
     .cpu, .ram {

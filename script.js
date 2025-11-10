@@ -23,6 +23,7 @@ let isPaused = false;
 let currentIntervalMs = 0;
 let targetIntervalMs = 0;
 let accelerationSteps = 10; // Number of steps to reach target speed
+let shouldAnimateChanges = false; // Flag to control when animations should trigger
 
 const instructions = ['LOAD', 'ADD', 'STORE', 'JUMP'];
 
@@ -60,6 +61,55 @@ function updateDisplay() {
 
     updateRAMTable();
     updateTooltips();
+}
+
+function addRow() {
+    const newAddress = ram.length;
+    ram.push({
+        address: newAddress,
+        type: 'data',
+        value: '0'
+    });
+    hasChanges = true;
+    updateDisplay();
+}
+
+function cancelChanges() {
+    // Restore RAM from previousRam
+    ram = previousRam.map(item => ({ ...item }));
+    
+    // Adjust PC if it's pointing beyond the restored RAM size
+    if (pc >= ram.length) {
+        pc = ram.length - 1;
+    }
+    
+    hasChanges = false;
+    
+    // Exit edit mode and return to display mode
+    toggleMode();
+}
+
+function removeRow(address) {
+    if (ram.length <= 1) {
+        alert('Cannot remove the last row');
+        return;
+    }
+    
+    // Remove the row
+    ram = ram.filter(item => item.address !== address);
+    
+    // Reindex addresses
+    ram.forEach((item, index) => {
+        item.address = index;
+    });
+    
+    // Adjust PC if it's pointing beyond the new RAM size
+    if (pc >= ram.length) {
+        pc = ram.length - 1;
+    }
+    
+    hasChanges = true;
+    updateDisplay();
 }
 
 function updateRAMTable() {
@@ -171,55 +221,143 @@ function updateRAMTable() {
             valueCell.textContent = item.value || '0';
             
             // Check if this RAM cell has changed and trigger electric animation
-            const previousItem = previousRam.find(prev => prev.address === item.address);
-            if (previousItem && previousItem.value !== item.value) {
-                // Apply electric effect to the entire row
-                row.classList.add('electric-active-row');
-                
-                // Remove the class after animation completes
-                setTimeout(() => {
-                    row.classList.remove('electric-active-row');
-                }, 1200);
+            // Only animate if shouldAnimateChanges is true (during instruction execution)
+            if (shouldAnimateChanges) {
+                const previousItem = previousRam.find(prev => prev.address === item.address);
+                if (previousItem && previousItem.value !== item.value) {
+                    // Apply electric effect to the entire row
+                    row.classList.add('electric-active-row');
+                    
+                    // Remove the class after animation completes
+                    setTimeout(() => {
+                        row.classList.remove('electric-active-row');
+                    }, 1200);
+                }
             }
+        }
+        
+        // Actions column (only in edit mode)
+        if (currentMode === 'edit') {
+            const actionsCell = row.insertCell(3);
+            actionsCell.className = 'actions-cell';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'remove-row-btn';
+            removeBtn.title = 'Remove row';
+            removeBtn.onclick = () => removeRow(item.address);
+            
+            actionsCell.appendChild(removeBtn);
         }
     }
     
-    // Update previousRam after checking for changes
-    previousRam = ram.map(item => ({ ...item }));
+    // Add "Add Row" button at the bottom in edit mode
+    if (currentMode === 'edit') {
+        const row = ramTable.insertRow();
+        row.className = 'add-row-row';
+        const cell = row.insertCell(0);
+        cell.colSpan = 4;
+        
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '+ Add Row';
+        addBtn.className = 'add-row-btn';
+        addBtn.onclick = addRow;
+        
+        cell.appendChild(addBtn);
+    }
     
-    // Add a single Save button for all changes (in the RAM header)
+    // Manage edit mode buttons in the RAM header
     const modeSwitch = document.querySelector('.mode-switch');
+    const modeToggleBtn = document.getElementById('modeToggle');
     let saveButton = document.getElementById('saveAllButton');
+    let cancelButton = document.getElementById('cancelButton');
     
     if (currentMode === 'edit') {
-        if (!saveButton) {
-            saveButton = document.createElement('button');
-            saveButton.textContent = 'Save All Changes';
-            saveButton.onclick = saveAllChanges;
-            saveButton.id = 'saveAllButton';
-            saveButton.className = 'save-changes-btn';
-            // Insert before the mode toggle button
-            modeSwitch.insertBefore(saveButton, modeSwitch.firstChild);
+        // Always show the mode toggle button (View button)
+        if (modeToggleBtn) {
+            modeToggleBtn.style.display = 'flex';
         }
-        saveButton.style.display = 'inline-flex';
-        saveButton.disabled = !hasChanges;
-        saveButton.style.opacity = hasChanges ? '1' : '0.5';
-        saveButton.style.cursor = hasChanges ? 'pointer' : 'not-allowed';
+        
+        // Show Save and Cancel buttons only if there are changes
+        if (hasChanges) {
+            // Create Save button if it doesn't exist
+            if (!saveButton) {
+                saveButton = document.createElement('button');
+                saveButton.textContent = 'Save All Changes';
+                saveButton.onclick = saveAllChanges;
+                saveButton.id = 'saveAllButton';
+                saveButton.className = 'save-changes-btn';
+                modeSwitch.insertBefore(saveButton, modeToggleBtn);
+            }
+            saveButton.style.display = 'inline-flex';
+            
+            // Create Cancel button if it doesn't exist
+            if (!cancelButton) {
+                cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = cancelChanges;
+                cancelButton.id = 'cancelButton';
+                cancelButton.className = 'cancel-changes-btn';
+                modeSwitch.insertBefore(cancelButton, modeToggleBtn);
+            }
+            cancelButton.style.display = 'inline-flex';
+        } else {
+            // Remove save and cancel buttons when there are no changes
+            if (saveButton) {
+                saveButton.remove();
+            }
+            if (cancelButton) {
+                cancelButton.remove();
+            }
+        }
     } else {
-        // Remove save button when not in edit mode
+        // Show the mode toggle button in display mode
+        if (modeToggleBtn) {
+            modeToggleBtn.style.display = 'flex';
+        }
+        
+        // Remove save and cancel buttons when not in edit mode
         if (saveButton) {
             saveButton.remove();
+        }
+        if (cancelButton) {
+            cancelButton.remove();
         }
     }
 }
 
 function checkForChanges() {
     const ramTable = document.getElementById('ram-table').getElementsByTagName('tbody')[0];
+    const previousHasChanges = hasChanges;
+    
+    // If hasChanges is already true (from add/remove operations), keep it true
+    if (hasChanges) {
+        const saveButton = document.getElementById('saveAllButton');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.style.opacity = '1';
+            saveButton.style.cursor = 'pointer';
+        }
+        return;
+    }
+    
     hasChanges = false;
     
-    for (let i = 0; i < ram.length; i++) {
+    // Check if number of rows changed
+    if (ram.length !== previousRam.length) {
+        hasChanges = true;
+    }
+    
+    // Check for inline edits
+    for (let i = 0; i < ram.length && i < ramTable.rows.length; i++) {
         const row = ramTable.rows[i];
+        
+        // Skip the add-row button row
+        if (row.className === 'add-row-row') continue;
+        
         const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+        if (!typeSelect) continue; // Skip if not in edit mode
+        
         const newType = typeSelect.value;
         
         // Check if type changed
@@ -254,11 +392,51 @@ function checkForChanges() {
         }
     }
     
-    const saveButton = document.getElementById('saveAllButton');
-    if (saveButton) {
-        saveButton.disabled = !hasChanges;
-        saveButton.style.opacity = hasChanges ? '1' : '0.5';
-        saveButton.style.cursor = hasChanges ? 'pointer' : 'not-allowed';
+    // If hasChanges state changed, update the button visibility
+    if (hasChanges !== previousHasChanges) {
+        updateEditModeButtons();
+    }
+}
+
+function updateEditModeButtons() {
+    // Update button visibility without rebuilding the table
+    const modeSwitch = document.querySelector('.mode-switch');
+    const modeToggleBtn = document.getElementById('modeToggle');
+    let saveButton = document.getElementById('saveAllButton');
+    let cancelButton = document.getElementById('cancelButton');
+    
+    if (currentMode === 'edit') {
+        if (hasChanges) {
+            // Create Save button if it doesn't exist
+            if (!saveButton) {
+                saveButton = document.createElement('button');
+                saveButton.textContent = 'Save All Changes';
+                saveButton.onclick = saveAllChanges;
+                saveButton.id = 'saveAllButton';
+                saveButton.className = 'save-changes-btn';
+                modeSwitch.insertBefore(saveButton, modeToggleBtn);
+            }
+            saveButton.style.display = 'inline-flex';
+            
+            // Create Cancel button if it doesn't exist
+            if (!cancelButton) {
+                cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancel';
+                cancelButton.onclick = cancelChanges;
+                cancelButton.id = 'cancelButton';
+                cancelButton.className = 'cancel-changes-btn';
+                modeSwitch.insertBefore(cancelButton, modeToggleBtn);
+            }
+            cancelButton.style.display = 'inline-flex';
+        } else {
+            // Remove save and cancel buttons when there are no changes
+            if (saveButton) {
+                saveButton.remove();
+            }
+            if (cancelButton) {
+                cancelButton.remove();
+            }
+        }
     }
 }
 
@@ -267,7 +445,13 @@ function saveAllChanges() {
     
     for (let i = 0; i < ram.length; i++) {
         const row = ramTable.rows[i];
+        
+        // Skip the add-row button row
+        if (row.className === 'add-row-row') continue;
+        
         const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+        if (!typeSelect) continue; // Skip if not in edit mode
+        
         const newType = typeSelect.value;
         
         ram[i].type = newType;
@@ -290,11 +474,17 @@ function saveAllChanges() {
         }
     }
     
+    // Update previousRam to reflect the saved state
+    previousRam = ram.map(item => ({ ...item }));
+    
     hasChanges = false;
     updateDisplay();
 }
 
 function executeInstruction() {
+    // Enable animations for this execution
+    shouldAnimateChanges = true;
+    
     switch (executionPhase) {
         case 'Fetch':
             ir = ram[pc].value;
@@ -324,6 +514,9 @@ function executeInstruction() {
             break;
     }
     updateDisplay();
+    
+    // Disable animations after display update
+    shouldAnimateChanges = false;
 }
 
 function clockTick() {
@@ -351,9 +544,13 @@ function toggleMode() {
         // Switch to Modify mode
         modeText.textContent = 'Modify';
         modeIcon.innerHTML = '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>';
+        // When switching back to display mode, update previousRam to current state
+        // This prevents animations from triggering on mode switch
+        previousRam = ram.map(item => ({ ...item }));
     }
     
     hasChanges = false;
+    shouldAnimateChanges = false; // Ensure no animations during mode switch
     updateDisplay();
 }
 

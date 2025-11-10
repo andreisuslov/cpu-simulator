@@ -623,6 +623,7 @@ function startAuto() {
     isPaused = false;
     document.getElementById('startBtn').classList.add('hidden');
     document.getElementById('runningControls').classList.remove('hidden');
+    document.getElementById('autoResetBtn').classList.add('hidden');
     document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('intervalInput').disabled = true;
     
@@ -713,6 +714,7 @@ function stopAuto() {
     
     document.getElementById('startBtn').classList.remove('hidden');
     document.getElementById('runningControls').classList.add('hidden');
+    document.getElementById('autoResetBtn').classList.remove('hidden');
     document.getElementById('pauseBtn').textContent = 'Pause';
     document.getElementById('intervalInput').disabled = false;
     

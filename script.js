@@ -24,6 +24,7 @@ let currentIntervalMs = 0;
 let targetIntervalMs = 0;
 let accelerationSteps = 10; // Number of steps to reach target speed
 let shouldAnimateChanges = false; // Flag to control when animations should trigger
+let currentError = null; // Track current execution error
 
 const instructions = ['LOAD', 'ADD', 'STORE', 'JUMP'];
 
@@ -482,41 +483,177 @@ function saveAllChanges() {
 }
 
 function executeInstruction() {
+    // Clear any previous error
+    clearError();
+    
     // Enable animations for this execution
     shouldAnimateChanges = true;
     
-    switch (executionPhase) {
-        case 'Fetch':
-            ir = ram[pc].value;
-            executionPhase = 'Decode';
-            break;
-        case 'Decode':
-            executionPhase = 'Execute';
-            break;
-        case 'Execute':
-            const [operation, operand] = ir.split(' ');
-            switch (operation) {
-                case 'LOAD':
-                    accumulator = parseInt(ram[parseInt(operand)].value) || 0;
-                    break;
-                case 'ADD':
-                    accumulator += parseInt(ram[parseInt(operand)].value) || 0;
-                    break;
-                case 'STORE':
-                    ram[parseInt(operand)].value = accumulator.toString();
-                    break;
-                case 'JUMP':
-                    pc = (parseInt(operand) - 1 + ram.length) % ram.length;
-                    break;
-            }
-            pc = (pc + 1) % ram.length;
-            executionPhase = 'Fetch';
-            break;
+    try {
+        switch (executionPhase) {
+            case 'Fetch':
+                // Validate PC is within bounds
+                if (pc < 0 || pc >= ram.length) {
+                    throw new Error(`Program Counter (${pc}) is out of bounds. Valid range is 0-${ram.length - 1}.`);
+                }
+                
+                // Validate instruction exists
+                if (!ram[pc] || ram[pc].value === undefined || ram[pc].value === null || ram[pc].value === '') {
+                    throw new Error(`No instruction found at RAM address ${pc}.`);
+                }
+                
+                ir = ram[pc].value;
+                executionPhase = 'Decode';
+                break;
+                
+            case 'Decode':
+                // Validate instruction format
+                const parts = ir.trim().split(/\s+/);
+                if (parts.length === 0 || !parts[0]) {
+                    throw new Error(`Invalid instruction format: '${ir}'. Expected format: 'OPERATION OPERAND'.`);
+                }
+                
+                const decodedOperation = parts[0];
+                if (!instructions.includes(decodedOperation)) {
+                    throw new Error(`Unknown operation '${decodedOperation}' in instruction '${ir}'. Valid operations are: ${instructions.join(', ')}.`);
+                }
+                
+                executionPhase = 'Execute';
+                break;
+                
+            case 'Execute':
+                const [operation, operand] = ir.split(' ');
+                
+                switch (operation) {
+                    case 'LOAD':
+                        // Validate operand exists
+                        if (operand === undefined || operand === null || operand === '') {
+                            throw new Error(`LOAD instruction requires an operand. Found: '${ir}'.`);
+                        }
+                        
+                        const loadAddress = parseInt(operand);
+                        
+                        // Validate operand is a number
+                        if (isNaN(loadAddress)) {
+                            throw new Error(`LOAD operand must be a valid number. Found: '${operand}' in instruction '${ir}'.`);
+                        }
+                        
+                        // Validate address is within bounds
+                        if (loadAddress < 0 || loadAddress >= ram.length) {
+                            throw new Error(`LOAD operand ${loadAddress} is out of bounds. Valid RAM addresses are 0-${ram.length - 1}.`);
+                        }
+                        
+                        // Validate RAM cell exists
+                        if (!ram[loadAddress] || ram[loadAddress].value === undefined) {
+                            throw new Error(`Cannot LOAD from RAM address ${loadAddress}: cell does not exist or is undefined.`);
+                        }
+                        
+                        accumulator = parseInt(ram[loadAddress].value) || 0;
+                        break;
+                        
+                    case 'ADD':
+                        // Validate operand exists
+                        if (operand === undefined || operand === null || operand === '') {
+                            throw new Error(`ADD instruction requires an operand. Found: '${ir}'.`);
+                        }
+                        
+                        const addAddress = parseInt(operand);
+                        
+                        // Validate operand is a number
+                        if (isNaN(addAddress)) {
+                            throw new Error(`ADD operand must be a valid number. Found: '${operand}' in instruction '${ir}'.`);
+                        }
+                        
+                        // Validate address is within bounds
+                        if (addAddress < 0 || addAddress >= ram.length) {
+                            throw new Error(`ADD operand ${addAddress} is out of bounds. Valid RAM addresses are 0-${ram.length - 1}.`);
+                        }
+                        
+                        // Validate RAM cell exists
+                        if (!ram[addAddress] || ram[addAddress].value === undefined) {
+                            throw new Error(`Cannot ADD from RAM address ${addAddress}: cell does not exist or is undefined.`);
+                        }
+                        
+                        accumulator += parseInt(ram[addAddress].value) || 0;
+                        break;
+                        
+                    case 'STORE':
+                        // Validate operand exists
+                        if (operand === undefined || operand === null || operand === '') {
+                            throw new Error(`STORE instruction requires an operand. Found: '${ir}'.`);
+                        }
+                        
+                        const storeAddress = parseInt(operand);
+                        
+                        // Validate operand is a number
+                        if (isNaN(storeAddress)) {
+                            throw new Error(`STORE operand must be a valid number. Found: '${operand}' in instruction '${ir}'.`);
+                        }
+                        
+                        // Validate address is within bounds
+                        if (storeAddress < 0 || storeAddress >= ram.length) {
+                            throw new Error(`STORE operand ${storeAddress} is out of bounds. Valid RAM addresses are 0-${ram.length - 1}.`);
+                        }
+                        
+                        // Validate RAM cell exists
+                        if (!ram[storeAddress]) {
+                            throw new Error(`Cannot STORE to RAM address ${storeAddress}: cell does not exist.`);
+                        }
+                        
+                        ram[storeAddress].value = accumulator.toString();
+                        break;
+                        
+                    case 'JUMP':
+                        // Validate operand exists
+                        if (operand === undefined || operand === null || operand === '') {
+                            throw new Error(`JUMP instruction requires an operand. Found: '${ir}'.`);
+                        }
+                        
+                        const jumpAddress = parseInt(operand);
+                        
+                        // Validate operand is a number
+                        if (isNaN(jumpAddress)) {
+                            throw new Error(`JUMP operand must be a valid number. Found: '${operand}' in instruction '${ir}'.`);
+                        }
+                        
+                        // Validate address is within bounds
+                        if (jumpAddress < 0 || jumpAddress >= ram.length) {
+                            throw new Error(`JUMP operand ${jumpAddress} is out of bounds. Valid RAM addresses are 0-${ram.length - 1}.`);
+                        }
+                        
+                        pc = (jumpAddress - 1 + ram.length) % ram.length;
+                        break;
+                        
+                    default:
+                        throw new Error(`Unknown operation '${operation}' in instruction '${ir}'. Valid operations are: ${instructions.join(', ')}.`);
+                }
+                
+                pc = (pc + 1) % ram.length;
+                executionPhase = 'Fetch';
+                break;
+        }
+        
+        updateDisplay();
+        
+    } catch (error) {
+        // Stop auto mode if running
+        if (isAutoRunning) {
+            stopAuto();
+        }
+        
+        // Reset to Fetch phase so next execution starts fresh
+        executionPhase = 'Fetch';
+        ir = 'NIL';
+        
+        // Display the error
+        displayError(error.message);
+        
+        // Update display to show current state
+        updateDisplay();
+    } finally {
+        // Disable animations after display update
+        shouldAnimateChanges = false;
     }
-    updateDisplay();
-    
-    // Disable animations after display update
-    shouldAnimateChanges = false;
 }
 
 function clockTick() {
@@ -728,7 +865,26 @@ function resetCPU() {
     ir = 'NIL';
     accumulator = 0;
     executionPhase = 'Fetch';
+    clearError();
     updateDisplay();
+}
+
+function displayError(message) {
+    currentError = message;
+    const errorDisplay = document.getElementById('executionError');
+    if (errorDisplay) {
+        errorDisplay.textContent = message;
+        errorDisplay.style.display = 'block';
+    }
+}
+
+function clearError() {
+    currentError = null;
+    const errorDisplay = document.getElementById('executionError');
+    if (errorDisplay) {
+        errorDisplay.textContent = '';
+        errorDisplay.style.display = 'none';
+    }
 }
 
 // Initialize pill button

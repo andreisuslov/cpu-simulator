@@ -917,22 +917,9 @@ function initializePillButton() {
     
     // Add click handler to entire pill button
     pillButton.addEventListener('click', function(e) {
-        const rect = pillButton.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const midpoint = rect.width / 2;
-        
-        // Determine which side was clicked
-        if (clickX < midpoint) {
-            // Left side - Manual
-            if (!pillButtonManual.classList.contains('pill-button-selection_active')) {
-                toggleExecutionMode('manual');
-            }
-        } else {
-            // Right side - Auto
-            if (!pillButtonAuto.classList.contains('pill-button-selection_active')) {
-                toggleExecutionMode('auto');
-            }
-        }
+        // Toggle mode regardless of click position
+        const nextMode = executionMode === 'manual' ? 'auto' : 'manual';
+        toggleExecutionMode(nextMode);
     });
     
     // Add resize handler to adjust highlight on window resize

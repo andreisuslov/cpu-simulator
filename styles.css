@@ -359,6 +359,13 @@ h2 {
         border-bottom-color: rgba(20, 20, 35, 0.98);
         border-top-color: transparent;
     }
+
+    .execution-error {
+        padding: 10px 12px;
+        font-size: 12px;
+        margin-top: 10px;
+        gap: 6px;
+    }
 }
 
 /* Button Tooltip Styles */

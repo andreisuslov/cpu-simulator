@@ -1,0 +1,26 @@
+/*
+ * Legacy aggregate stylesheet.
+ * The styles have been modularized into:
+ * - base.css
+ * - layout.css
+ * - components-controls.css
+ * - components-registers.css
+ * - components-ram-table.css
+ * - tooltips.css
+ * - validation.css
+ * - responsive.css
+ *
+ * index.html now includes these files directly in the correct order.
+ * This file is intentionally left minimal to preserve compatibility
+ * for any external references to styles.css.
+ */
+
+/* Ensure no behavioral change if someone still loads styles.css directly */
+@import url("base.css");
+@import url("layout.css");
+@import url("components-controls.css");
+@import url("components-registers.css");
+@import url("components-ram-table.css");
+@import url("tooltips.css");
+@import url("validation.css");
+@import url("responsive.css");

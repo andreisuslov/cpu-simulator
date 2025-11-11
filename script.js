@@ -16,6 +16,7 @@ let previousRam = ram.map(item => ({ ...item }));
 let executionPhase = 'Fetch';
 let currentMode = 'display';
 let hasChanges = false;
+let editingControlsEnabled = true;
 let executionMode = 'manual'; // 'manual' or 'auto'
 let autoInterval = null;
 let isAutoRunning = false;
@@ -25,8 +26,61 @@ let targetIntervalMs = 0;
 let accelerationSteps = 10; // Number of steps to reach target speed
 let shouldAnimateChanges = false; // Flag to control when animations should trigger
 let currentError = null; // Track current execution error
+let validationErrors = new Map(); // Track validation errors per row: Map<rowIndex, errorMessage>
 
 const instructions = ['LOAD', 'ADD', 'STORE', 'JUMP'];
+
+// Validation helper functions
+function isValidNumber(value) {
+    if (value === null || value === undefined || value === '') {
+        return false;
+    }
+    const trimmed = String(value).trim();
+    if (trimmed === '') {
+        return false;
+    }
+    // Check if it's a valid number (including negative numbers)
+    const num = Number(trimmed);
+    return !isNaN(num) && isFinite(num) && /^-?\d+$/.test(trimmed);
+}
+
+function validateDataValue(value) {
+    if (!isValidNumber(value)) {
+        return 'Data value must be a valid integer number (e.g., 0, 42, -5)';
+    }
+    return null;
+}
+
+function validateInstructionOperand(operand, instruction) {
+    if (!operand || operand.trim() === '') {
+        return `${instruction} instruction requires an address operand`;
+    }
+    
+    if (!isValidNumber(operand)) {
+        return `Operand must be a valid integer (address). Found: '${operand}'`;
+    }
+    
+    const address = parseInt(operand);
+    if (address < 0 || address >= ram.length) {
+        return `Address ${address} is out of bounds. Valid addresses: 0-${ram.length - 1}`;
+    }
+    
+    return null;
+}
+
+function validateRow(rowIndex) {
+    const item = ram[rowIndex];
+    if (!item) return null;
+    
+    if (item.type === 'data') {
+        return validateDataValue(item.value);
+    } else if (item.type === 'instruction') {
+        const [instruction, operand] = item.value.split(' ');
+        return validateInstructionOperand(operand, instruction);
+    }
+    
+    return null;
+}
 
 function updateDisplay() {
     const pcElement = document.getElementById('pc');
@@ -111,6 +165,11 @@ function removeRow(address) {
     
     hasChanges = true;
     updateDisplay();
+    
+    // Trigger validation to check for newly invalid address references
+    if (currentMode === 'edit') {
+        setTimeout(() => validateInputOnChange(), 100);
+    }
 }
 
 function updateRAMTable() {
@@ -157,15 +216,25 @@ function updateRAMTable() {
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.value = operand || '';
+                    input.placeholder = 'Address';
+                    input.setAttribute('data-validate', 'operand');
                     select.onchange = () => checkForChanges();
-                    input.oninput = () => checkForChanges();
+                    input.oninput = () => {
+                        checkForChanges();
+                        validateInputOnChange();
+                    };
                     valueCell.appendChild(select);
                     valueCell.appendChild(input);
                 } else {
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.value = item.value || '0';
-                    input.oninput = () => checkForChanges();
+                    input.placeholder = 'Number';
+                    input.setAttribute('data-validate', 'data');
+                    input.oninput = () => {
+                        checkForChanges();
+                        validateInputOnChange();
+                    };
                     valueCell.appendChild(input);
                 }
                 checkForChanges();
@@ -202,9 +271,14 @@ function updateRAMTable() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = operand || '';
+                input.placeholder = 'Address';
+                input.setAttribute('data-validate', 'operand');
                 
                 select.onchange = () => checkForChanges();
-                input.oninput = () => checkForChanges();
+                input.oninput = () => {
+                    checkForChanges();
+                    validateInputOnChange();
+                };
                 
                 valueCell.appendChild(select);
                 valueCell.appendChild(input);
@@ -213,7 +287,12 @@ function updateRAMTable() {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = item.value || '0';
-                input.oninput = () => checkForChanges();
+                input.placeholder = 'Number';
+                input.setAttribute('data-validate', 'data');
+                input.oninput = () => {
+                    checkForChanges();
+                    validateInputOnChange();
+                };
                 
                 valueCell.appendChild(input);
             }
@@ -237,8 +316,7 @@ function updateRAMTable() {
             }
         }
         
-        // Actions column (only in edit mode)
-        if (currentMode === 'edit') {
+        if (currentMode === 'edit' && editingControlsEnabled) {
             const actionsCell = row.insertCell(3);
             actionsCell.className = 'actions-cell';
             
@@ -252,8 +330,7 @@ function updateRAMTable() {
         }
     }
     
-    // Add "Add Row" button at the bottom in edit mode
-    if (currentMode === 'edit') {
+    if (currentMode === 'edit' && editingControlsEnabled) {
         const row = ramTable.insertRow();
         row.className = 'add-row-row';
         const cell = row.insertCell(0);
@@ -265,6 +342,11 @@ function updateRAMTable() {
         addBtn.onclick = addRow;
         
         cell.appendChild(addBtn);
+    }
+
+    const editHeader = document.querySelector('th.edit-column');
+    if (editHeader) {
+        editHeader.classList.toggle('hidden', currentMode === 'display' || !editingControlsEnabled);
     }
     
     // Manage edit mode buttons in the RAM header
@@ -302,6 +384,9 @@ function updateRAMTable() {
                 modeSwitch.insertBefore(cancelButton, modeToggleBtn);
             }
             cancelButton.style.display = 'inline-flex';
+            
+            // Update save button state based on validation errors
+            updateSaveButtonState();
         } else {
             // Remove save and cancel buttons when there are no changes
             if (saveButton) {
@@ -327,18 +412,87 @@ function updateRAMTable() {
     }
 }
 
+function validateInputOnChange() {
+    const ramTable = document.getElementById('ram-table').getElementsByTagName('tbody')[0];
+    validationErrors.clear();
+    
+    for (let i = 0; i < ram.length && i < ramTable.rows.length; i++) {
+        const row = ramTable.rows[i];
+        if (row.className === 'add-row-row') continue;
+        
+        const typeSelect = row.cells[1].getElementsByTagName('select')[0];
+        if (!typeSelect) continue;
+        
+        const currentType = typeSelect.value;
+        let errorMessage = null;
+        
+        if (currentType === 'instruction') {
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            const valueSelect = row.cells[2].getElementsByTagName('select')[0];
+            
+            if (valueInput && valueSelect) {
+                const instruction = valueSelect.value;
+                const operand = valueInput.value.trim();
+                
+                errorMessage = validateInstructionOperand(operand, instruction);
+            }
+        } else {
+            const valueInput = row.cells[2].getElementsByTagName('input')[0];
+            if (valueInput) {
+                const value = valueInput.value.trim();
+                errorMessage = validateDataValue(value);
+            }
+        }
+        
+        if (errorMessage) {
+            validationErrors.set(i, errorMessage);
+            row.classList.add('validation-error');
+            row.setAttribute('data-error', errorMessage);
+        } else {
+            row.classList.remove('validation-error');
+            row.removeAttribute('data-error');
+        }
+    }
+    
+    // Update save button state
+    updateSaveButtonState();
+
+    if (validationErrors.size === 0) {
+        const tooltipEl = document.querySelector('.validation-tooltip');
+        if (tooltipEl) {
+            tooltipEl.classList.remove('show');
+            tooltipEl.style.display = 'none';
+        }
+        const errorRows = document.querySelectorAll('tr.validation-error');
+        errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
+    }
+}
+
+function updateSaveButtonState() {
+    const saveButton = document.getElementById('saveAllButton');
+    if (saveButton) {
+        // Disable save button if validation errors exist
+        if (validationErrors.size > 0) {
+            saveButton.disabled = true;
+            saveButton.style.opacity = '0.5';
+            saveButton.style.cursor = 'not-allowed';
+            saveButton.title = 'Cannot save: Fix validation errors first';
+        } else if (hasChanges) {
+            saveButton.disabled = false;
+            saveButton.style.opacity = '1';
+            saveButton.style.cursor = 'pointer';
+            saveButton.title = '';
+        }
+    }
+}
+
 function checkForChanges() {
     const ramTable = document.getElementById('ram-table').getElementsByTagName('tbody')[0];
     const previousHasChanges = hasChanges;
     
     // If hasChanges is already true (from add/remove operations), keep it true
     if (hasChanges) {
-        const saveButton = document.getElementById('saveAllButton');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.style.opacity = '1';
-            saveButton.style.cursor = 'pointer';
-        }
+        updateSaveButtonState();
         return;
     }
     
@@ -429,6 +583,9 @@ function updateEditModeButtons() {
                 modeSwitch.insertBefore(cancelButton, modeToggleBtn);
             }
             cancelButton.style.display = 'inline-flex';
+            
+            // Update save button state based on validation errors
+            updateSaveButtonState();
         } else {
             // Remove save and cancel buttons when there are no changes
             if (saveButton) {
@@ -442,6 +599,11 @@ function updateEditModeButtons() {
 }
 
 function saveAllChanges() {
+    // Prevent saving if validation errors exist
+    if (validationErrors.size > 0) {
+        return;
+    }
+    
     const ramTable = document.getElementById('ram-table').getElementsByTagName('tbody')[0];
     
     for (let i = 0; i < ram.length; i++) {
@@ -479,7 +641,13 @@ function saveAllChanges() {
     previousRam = ram.map(item => ({ ...item }));
     
     hasChanges = false;
+    editingControlsEnabled = false;
     updateDisplay();
+    const tooltipEl = document.querySelector('.validation-tooltip');
+    if (tooltipEl) {
+        tooltipEl.classList.remove('show');
+        tooltipEl.style.display = 'none';
+    }
 }
 
 function executeInstruction() {
@@ -677,6 +845,11 @@ function toggleMode() {
         // Switch to View mode
         modeText.textContent = 'View';
         modeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        const tooltipEl = document.querySelector('.validation-tooltip');
+        if (tooltipEl) {
+            tooltipEl.style.display = '';
+        }
+        editingControlsEnabled = true;
     } else {
         // Switch to Modify mode
         modeText.textContent = 'Modify';
@@ -684,11 +857,29 @@ function toggleMode() {
         // When switching back to display mode, update previousRam to current state
         // This prevents animations from triggering on mode switch
         previousRam = ram.map(item => ({ ...item }));
+        editingControlsEnabled = false;
     }
     
     hasChanges = false;
     shouldAnimateChanges = false; // Ensure no animations during mode switch
+    
+    if (currentMode === 'display') {
+        validationErrors.clear();
+        const tooltipEl = document.querySelector('.validation-tooltip');
+        if (tooltipEl) {
+            tooltipEl.classList.remove('show');
+            tooltipEl.style.display = 'none';
+        }
+        const errorRows = document.querySelectorAll('tr.validation-error');
+        errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
+    }
+    
     updateDisplay();
+    
+    // Run validation when entering edit mode
+    if (currentMode === 'edit') {
+        setTimeout(() => validateInputOnChange(), 100);
+    }
 }
 
 function toggleExplanation() {
@@ -1590,6 +1781,99 @@ function initializeTooltips() {
                 accumulatorWrapper.classList.remove('show-tooltip');
             }
         }
+        
+        // Handle error tooltip on mobile
+        if (!e.target.closest('tr.validation-error')) {
+            const errorRows = document.querySelectorAll('tr.validation-error');
+            errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
+        }
+    });
+    
+    // Add touch handler for validation error tooltips
+    document.addEventListener('touchstart', function(e) {
+        const errorRow = e.target.closest('tr.validation-error');
+        if (errorRow) {
+            // Remove from all error rows
+            const errorRows = document.querySelectorAll('tr.validation-error');
+            errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
+            
+            // Add to this row
+            errorRow.classList.add('show-error-tooltip');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                errorRow.classList.remove('show-error-tooltip');
+            }, 3000);
+        }
+    });
+}
+
+// Validation tooltip handling
+let validationTooltip = null;
+
+function initializeValidationTooltips() {
+    // Create tooltip element
+    validationTooltip = document.createElement('div');
+    validationTooltip.className = 'validation-tooltip';
+    const arrow = document.createElement('div');
+    arrow.className = 'validation-tooltip-arrow';
+    validationTooltip.appendChild(arrow);
+    document.body.appendChild(validationTooltip);
+    
+    // Add event listeners to RAM table
+    const ramTable = document.getElementById('ram-table');
+    
+    ramTable.addEventListener('mouseover', (e) => {
+        const errorRow = e.target.closest('tr.validation-error');
+        if (errorRow && errorRow.hasAttribute('data-error')) {
+            const error = errorRow.getAttribute('data-error');
+            const rect = errorRow.getBoundingClientRect();
+            
+            validationTooltip.textContent = error;
+            validationTooltip.appendChild(arrow); // Re-append arrow after setting text
+            
+            // Position above the row
+            const tooltipHeight = 60; // Approximate
+            validationTooltip.style.left = `${rect.left + rect.width / 2}px`;
+            validationTooltip.style.top = `${rect.top - tooltipHeight - 10}px`;
+            validationTooltip.style.transform = 'translateX(-50%)';
+            
+            // Show after a delay
+            setTimeout(() => {
+                validationTooltip.classList.add('show');
+            }, 300);
+        }
+    });
+    
+    ramTable.addEventListener('mouseout', (e) => {
+        const errorRow = e.target.closest('tr.validation-error');
+        if (errorRow || !e.relatedTarget || !e.relatedTarget.closest) {
+            validationTooltip.classList.remove('show');
+        }
+    });
+    
+    // Handle mobile tap
+    ramTable.addEventListener('touchstart', (e) => {
+        const errorRow = e.target.closest('tr.validation-error');
+        if (errorRow && errorRow.hasAttribute('data-error')) {
+            const error = errorRow.getAttribute('data-error');
+            const rect = errorRow.getBoundingClientRect();
+            
+            validationTooltip.textContent = error;
+            validationTooltip.appendChild(arrow);
+            
+            const tooltipHeight = 60;
+            validationTooltip.style.left = `${rect.left + rect.width / 2}px`;
+            validationTooltip.style.top = `${rect.top - tooltipHeight - 10}px`;
+            validationTooltip.style.transform = 'translateX(-50%)';
+            
+            validationTooltip.classList.add('show');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                validationTooltip.classList.remove('show');
+            }, 3000);
+        }
     });
 }
 
@@ -1597,3 +1881,4 @@ function initializeTooltips() {
 updateDisplay();
 initializePillButton();
 initializeTooltips();
+initializeValidationTooltips();

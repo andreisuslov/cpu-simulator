@@ -901,7 +901,8 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     position: relative;
-    table-layout: auto;
+    table-layout: fixed;
+    width: 100%;
 }
 
 thead {
@@ -1850,4 +1851,55 @@ tbody tr:has(td:nth-child(4)) td:nth-child(3) {
     .bottom-row {
         flex-direction: row;
     }
+}
+
+/* Validation Error Styles - using ONLY layout-safe properties */
+tr.validation-error td {
+    background: rgba(201, 72, 72, 0.12) !important;
+    box-shadow: inset 0 0 0 2px rgba(201, 72, 72, 0.4);
+}
+
+tr.validation-error input {
+    background: rgba(201, 72, 72, 0.18) !important;
+}
+
+/* Tooltip will be handled via JavaScript-created floating element to avoid table layout issues */
+.validation-tooltip {
+    position: fixed;
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(20px);
+    color: #ffb3b3;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+    max-width: 280px;
+    min-width: 200px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(201, 72, 72, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+    z-index: 10000;
+    font-weight: 500;
+    text-align: center;
+}
+
+.validation-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.validation-tooltip-arrow {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(20, 20, 35, 0.98);
 }

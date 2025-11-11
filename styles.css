@@ -951,6 +951,11 @@ th {
     color: #a0a0b0;
 }
 
+/* Address column header responsive text */
+.address-short {
+    display: none;
+}
+
 td {
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
     font-size: 14px;
@@ -1568,6 +1573,15 @@ tr.electric-active-row::after {
     
     th {
         font-size: 11px;
+    }
+    
+    /* Address column header - show only # on mobile */
+    .address-full {
+        display: none;
+    }
+    
+    .address-short {
+        display: inline;
     }
     
     td select,

@@ -1161,11 +1161,17 @@ td .input-group {
 .type-instruction {
     color: #ffa366;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .type-data {
     color: #66b3ff;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Save button styling - positioned in RAM header */
@@ -1745,6 +1751,7 @@ tr.electric-active-row::after {
     
     th, td {
         padding: 6px 8px;
+        margin-right: 3px;
         font-size: 11px;
     }
     

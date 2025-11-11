@@ -1,5 +1,5 @@
-describe('RAM Row Position After Runtime Error', () => {
-  it('should maintain row #1 position after removing row #7, fixing validation, and encountering runtime error', () => {
+describe('RAM Row Position Stability', () => {
+  it('should maintain row #1 position after removing row, fixing validation, and executing code', () => {
     // Step 1: Open the page of the app
     cy.visit('/');
     
@@ -64,14 +64,14 @@ describe('RAM Row Position After Runtime Error', () => {
     cy.get('#modeToggle').click();
     cy.wait(300);
     
-    // Change row 3 (JUMP 1) to JUMP 0 to cause runtime error
+    // Change row 3 (JUMP 1) to JUMP 99 to cause runtime error
     cy.get('#ram-table tbody tr').eq(3).within(() => {
-      cy.get('td').eq(2).find('input').clear().type('0');
+      cy.get('td').eq(2).find('input').clear().type('99');
     });
     
     cy.wait(300);
     
-    // Save changes (no validation error with valid address)
+    // Save with validation warning (button should be enabled even with validation error)
     cy.get('#saveAllButton').should('not.be.disabled').click();
     cy.wait(200);
     
@@ -84,7 +84,8 @@ describe('RAM Row Position After Runtime Error', () => {
     cy.wait(200);
     cy.get('#startBtn').click();
     
-    // Wait for error to appear - JUMP 0 will cause out of bounds error
+    // Wait for error to appear - JUMP 99 will cause out of bounds error
+    cy.get('#executionError', { timeout: 10000 }).should('not.be.empty').should('be.visible');
     cy.wait(500);
     
     // Step 10: Click edit table button

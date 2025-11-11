@@ -1,0 +1,174 @@
+# CPU Simulator
+
+A web-based CPU simulator that provides an interactive environment for understanding computer architecture and assembly language programming. This educational tool simulates CPU operations including registers, RAM, and instruction execution cycles.
+
+## Overview
+
+The CPU Simulator allows users to:
+- Write and execute assembly-like instructions
+- Visualize CPU registers and their values
+- Interact with simulated RAM
+- Step through program execution manually or automatically
+- Understand fetch-decode-execute cycles
+- Fix their custom instructions with helpful error messages
+
+## Technologies
+
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Testing**: Cypress (v13.6.0)
+
+## Project Structure
+
+```
+cpu-simulator/
+├── index.html               # Main application HTML
+├── script.js                # Core application logic
+├── styles/                  # CSS stylesheets
+│   ├── base.css             # Base styles
+│   ├── components-*.css     # Component-specific styles
+│   ├── layout.css           # Layout styles
+│   ├── responsive.css       # Responsive design
+│   ├── tooltips.css         # Tooltip styles
+│   └── validation.css       # Validation styles
+├── cypress/                 # Test suite
+│   └── e2e/                 # End-to-end tests
+│       ├── regression/      # Regression tests
+│       └── smoke/           # Smoke tests
+│           ├── auto-mode/   # Auto execution tests
+│           ├── cpu/         # CPU functionality tests
+│           ├── integration/ # Integration tests
+│           ├── ram/         # RAM operations tests
+│           └── ui/          # UI/UX tests
+└── package.json             # Node.js dependencies
+```
+
+## Prerequisites
+
+- **Node.js** (v14 or higher)
+- **npm** (comes with Node.js)
+- A web browser (Chrome, Firefox, Safari, or Edge)
+- A local web server to serve static files (I use Python's http.server)
+
+## Installation and running
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start a local web server in the project directory:
+
+   ```bash
+   python3 -m http.server 8000
+   ```
+
+3. Navigate to:
+   ```
+   http://localhost:8000
+   ```
+
+## Tests
+
+The project uses Cypress for comprehensive end-to-end testing. Tests are organized into smoke tests (quick validation) and regression tests (thorough testing).
+
+### Headless mode
+
+Execute all tests without opening the Cypress UI:
+```bash
+npm run cypress:run
+```
+
+Or run specific test suites:
+```bash
+# Run all smoke tests
+npx cypress run --spec "cypress/e2e/smoke/**/*.cy.js"
+
+# Run all regression tests
+npx cypress run --spec "cypress/e2e/regression/**/*.cy.js"
+```
+
+### Interactive mode
+
+Open Cypress Test Runner for interactive testing and debugging:
+```bash
+npm run cypress:open
+```
+
+### Run specific test suites
+
+```bash
+# CPU tests only
+npx cypress run --spec "cypress/e2e/smoke/cpu/**/*.cy.js"
+
+# RAM tests only
+npx cypress run --spec "cypress/e2e/smoke/ram/**/*.cy.js"
+
+# UI tests only
+npx cypress run --spec "cypress/e2e/smoke/ui/**/*.cy.js"
+
+# Integration tests only
+npx cypress run --spec "cypress/e2e/smoke/integration/**/*.cy.js"
+
+# Auto-mode tests only
+npx cypress run --spec "cypress/e2e/smoke/auto-mode/**/*.cy.js"
+```
+
+## Test Documentation
+
+Each test folder contains its own README with specific instructions:
+- [`cypress/e2e/regression/README.md`](cypress/e2e/regression/README.md) - Regression test documentation
+- [`cypress/e2e/smoke/README.md`](cypress/e2e/smoke/README.md) - Smoke test overview
+- [`cypress/e2e/smoke/auto-mode/README.md`](cypress/e2e/smoke/auto-mode/README.md) - Auto-mode test documentation
+- [`cypress/e2e/smoke/cpu/README.md`](cypress/e2e/smoke/cpu/README.md) - CPU test documentation
+- [`cypress/e2e/smoke/integration/README.md`](cypress/e2e/smoke/integration/README.md) - Integration test documentation
+- [`cypress/e2e/smoke/ram/README.md`](cypress/e2e/smoke/ram/README.md) - RAM test documentation
+- [`cypress/e2e/smoke/ui/README.md`](cypress/e2e/smoke/ui/README.md) - UI test documentation
+
+## Features
+
+### CPU Simulation
+- 8-bit registers (A, B, C, D)
+- Program Counter (PC)
+- Instruction Register (IR)
+- Flags Register
+- Clock cycle simulation
+
+### RAM Management
+- Interactive RAM table
+- Edit mode for modifying memory values
+- Validation with error tooltips
+- Data persistence during execution
+
+### Instruction set (TODO: implement sub, load, store, jmp, jz, jnz, halt, nop)
+- Basic arithmetic operations (ADD, SUB)
+- Data movement (MOV, LOAD, STORE)
+- Control flow (JMP, JZ, JNZ)
+- System operations (HALT, NOP)
+
+### Modes
+- **Manual mode**: step through instructions one at a time
+- **Auto mode**: automatic execution with adjustable speed
+- Visual feedback for current execution phase
+
+## Browser Compatibility
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests to ensure nothing is broken
+5. Submit a pull request
+
+## License
+
+[Specify your license here]
+
+## Support
+
+For issues, questions, or suggestions, please [open an issue](link-to-issues) on the project repository.

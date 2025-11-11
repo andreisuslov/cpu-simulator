@@ -71,7 +71,7 @@ cpu-simulator/
 
 The project uses Cypress for comprehensive end-to-end testing. Tests are organized into smoke tests (quick validation) and regression tests (thorough testing).
 
-### Headless mode
+### Headless and interactive modes
 
 Execute all tests without opening the Cypress UI:
 ```bash
@@ -86,8 +86,6 @@ npx cypress run --spec "cypress/e2e/smoke/**/*.cy.js"
 # Run all regression tests
 npx cypress run --spec "cypress/e2e/regression/**/*.cy.js"
 ```
-
-### Interactive mode
 
 Open Cypress Test Runner for interactive testing and debugging:
 ```bash
@@ -112,17 +110,6 @@ npx cypress run --spec "cypress/e2e/smoke/integration/**/*.cy.js"
 # Auto-mode tests only
 npx cypress run --spec "cypress/e2e/smoke/auto-mode/**/*.cy.js"
 ```
-
-## Test Documentation
-
-Each test folder contains its own README with specific instructions:
-- [`cypress/e2e/regression/README.md`](cypress/e2e/regression/README.md) - Regression test documentation
-- [`cypress/e2e/smoke/README.md`](cypress/e2e/smoke/README.md) - Smoke test overview
-- [`cypress/e2e/smoke/auto-mode/README.md`](cypress/e2e/smoke/auto-mode/README.md) - Auto-mode test documentation
-- [`cypress/e2e/smoke/cpu/README.md`](cypress/e2e/smoke/cpu/README.md) - CPU test documentation
-- [`cypress/e2e/smoke/integration/README.md`](cypress/e2e/smoke/integration/README.md) - Integration test documentation
-- [`cypress/e2e/smoke/ram/README.md`](cypress/e2e/smoke/ram/README.md) - RAM test documentation
-- [`cypress/e2e/smoke/ui/README.md`](cypress/e2e/smoke/ui/README.md) - UI test documentation
 
 ## Features
 
@@ -150,25 +137,10 @@ Each test folder contains its own README with specific instructions:
 - **Auto mode**: automatic execution with adjustable speed
 - Visual feedback for current execution phase
 
-## Browser Compatibility
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests to ensure nothing is broken
-5. Submit a pull request
-
 ## License
 
-[Specify your license here]
+No rights reserved.
 
 ## Support
 
-For issues, questions, or suggestions, please [open an issue](link-to-issues) on the project repository.
+Always welcome.

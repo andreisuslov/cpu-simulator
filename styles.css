@@ -59,7 +59,7 @@ body {
     display: flex;
     height: auto;
     max-height: 900px;
-    min-height: 750px;
+    min-height: 500px;
     gap: 2px;
     overflow: hidden;
 }
@@ -358,6 +358,10 @@ h2 {
         border: 8px solid transparent;
         border-bottom-color: rgba(20, 20, 35, 0.98);
         border-top-color: transparent;
+    }
+
+    .explanation-content {
+        padding: 20px 0 0;
     }
 
     .execution-error {
@@ -1044,7 +1048,7 @@ input {
 }
 #explanationToggle {
     width: 100%;
-    margin-top: 0;
+    margin-top: 32px;
     margin-bottom: auto;
     border-radius: 0 0 24px 24px;
     background: rgba(30, 30, 50, 0.8);
@@ -1053,17 +1057,29 @@ input {
 .explanation {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    padding: 0 32px;
+    transition: max-height 0.5s ease-out;
+    padding: 0;
     box-sizing: border-box;
-    /* margin-bottom: 20px; */
     background: rgba(30, 30, 50, 0.5);
 }
 
 .explanation.visible {
-    max-height: 1000px;
-    transition: max-height 0.5s ease-in;
-    padding: 32px;
+    padding: 0;
+    border-radius: 0 0 24px 24px;
+}
+.explanation-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 0 0;
+}
+
+.explanation-content > *:last-child {
+    margin-bottom: 0;
+}
+
+.explanation-content ul,
+.explanation-content ol {
+    padding-left: 24px;
 }
 .explanation h2 {
     font-size: 24px;
@@ -1566,17 +1582,18 @@ tr.electric-active-row::after {
     }
     
     #explanationToggle {
+        margin-top: 20px;
         border-radius: 0 0 16px 16px;
         font-size: 14px;
         padding: 12px 20px;
     }
     
     .explanation {
-        padding: 0 16px;
+        padding: 0;
     }
     
     .explanation.visible {
-        padding: 20px 16px;
+        padding: 0;
         max-height: 2000px;
     }
     

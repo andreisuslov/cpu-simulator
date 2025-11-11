@@ -118,7 +118,7 @@
                     <table id="ram-table">
                         <thead>
                             <tr>
-                                <th>Address</th>
+                                <th>Addr</th>
                                 <th>Type</th>
                                 <th>Value</th>
                                 <th class="edit-column hidden">Actions</th>
@@ -133,25 +133,27 @@
         </div>
         <button id="explanationToggle" onclick="toggleExplanation()">Show Explanation</button>
         <div id="explanation" class="explanation">
-            <h2>What is this and how does it work?</h2>
-            <p>This simulator demonstrates the basic functioning of a Central Processing Unit (CPU) in a computer. At its core, every modern computer operates on similar principles, no matter how complex its tasks may seem.</p>
-            <p>The simulation shows five main components:</p>
-            <ul>
-                <li><strong>CPU:</strong> the brain of the computer, containing registers for temporary data storage and processing.</li>
-                <li><strong>RAM (Random Access Memory):</strong> where instructions and data are stored for quick access.</li>
-                <li><strong>Clock:</strong> represented by the "Clock Tick" button, it drives the CPU through its cycle.</li>
-                <li><strong>Program Counter:</strong> keeps track of which instruction to execute next.</li>
-                <li><strong>Accumulator:</strong> shows the current cycle of the execution phases, the CPU needs to fetch, decode, and execute every instruction present in RAM before moving to the next phase of the cycle.</li>
-            </ul>
-            <p>The CPU operates in a continuous "Fetch-Decode-Execute" cycle:</p>
-            <ol>
-                <li><strong>Fetch:</strong> the CPU pulls instructions from memory (RAM).</li>
-                <li><strong>Decode:</strong> the CPU figures out what they mean.</li>
-                <li><strong>Execute:</strong> the CPU carries out those tasks.</li>
-            </ol>
-            <p>In this simulator, you can see (and edit) this cycle in action. The program loaded into RAM is a simple counting program. With each complete cycle, it increments a value stored in RAM.</p>
-            <p>While this simulation runs at a speed we can observe, real CPUs execute billions of instructions per second. This incredible speed allows computers to perform complex tasks like playing video games or displaying this web page.</p>
-            <p>You can interact with this simulator by clicking the "Clock Tick" button to step through each phase of the cycle, or by switching to "Edit Mode" to modify the instructions in RAM. Or you can enable the "Auto-Run" mode to see the simulation progress automatically.</p>
+            <div class="explanation-content">
+                <h2>What is this and how does it work?</h2>
+                <p>This simulator demonstrates the basic functioning of a Central Processing Unit (CPU) in a computer. At its core, every modern computer operates on similar principles, no matter how complex its tasks may seem.</p>
+                <p>The simulation shows five main components:</p>
+                <ul>
+                    <li><strong>CPU:</strong> the brain of the computer, containing registers for temporary data storage and processing.</li>
+                    <li><strong>RAM (Random Access Memory):</strong> where instructions and data are stored for quick access.</li>
+                    <li><strong>Clock:</strong> represented by the "Clock Tick" button, it drives the CPU through its cycle.</li>
+                    <li><strong>Program Counter:</strong> keeps track of which instruction to execute next.</li>
+                    <li><strong>Accumulator:</strong> shows the current cycle of the execution phases, the CPU needs to fetch, decode, and execute every instruction present in RAM before moving to the next phase of the cycle.</li>
+                </ul>
+                <p>The CPU operates in a continuous "Fetch-Decode-Execute" cycle:</p>
+                <ol>
+                    <li><strong>Fetch:</strong> the CPU pulls instructions from memory (RAM).</li>
+                    <li><strong>Decode:</strong> the CPU figures out what they mean.</li>
+                    <li><strong>Execute:</strong> the CPU carries out those tasks.</li>
+                </ol>
+                <p>In this simulator, you can see (and edit) this cycle in action. The program loaded into RAM is a simple counting program. With each complete cycle, it increments a value stored in RAM.</p>
+                <p>While this simulation runs at a speed we can observe, real CPUs execute billions of instructions per second. This incredible speed allows computers to perform complex tasks like playing video games or displaying this web page.</p>
+                <p>You can interact with this simulator by clicking the "Clock Tick" button to step through each phase of the cycle, or by switching to "Edit Mode" to modify the instructions in RAM. Or you can enable the "Auto-Run" mode to see the simulation progress automatically.</p>
+            </div>
         </div>
     </div>
 

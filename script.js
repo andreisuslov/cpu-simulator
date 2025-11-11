@@ -885,12 +885,32 @@ function toggleMode() {
 function toggleExplanation() {
     const explanation = document.getElementById('explanation');
     const button = document.getElementById('explanationToggle');
-    if (explanation.classList.contains('visible')) {
+    const container = document.querySelector('.container');
+    const isVisible = explanation.classList.contains('visible');
+    if (isVisible) {
+        explanation.style.maxHeight = explanation.scrollHeight + 'px';
+        void explanation.offsetHeight;
+        explanation.style.maxHeight = '0px';
         explanation.classList.remove('visible');
         button.textContent = 'Show Explanation';
+        setTimeout(() => {
+            explanation.parentNode.insertBefore(button, explanation);
+        }, 500);
+        if (container) {
+            container.style.maxHeight = '';
+            container.style.overflow = '';
+        }
     } else {
         explanation.classList.add('visible');
         button.textContent = 'Hide Explanation';
+        explanation.appendChild(button);
+        setTimeout(() => {
+            explanation.style.maxHeight = explanation.scrollHeight + 'px';
+        }, 10);
+        if (container) {
+            container.style.maxHeight = 'none';
+            container.style.overflow = 'visible';
+        }
     }
 }
 

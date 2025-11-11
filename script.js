@@ -349,6 +349,12 @@ function updateRAMTable() {
         editHeader.classList.toggle('hidden', currentMode === 'display' || !editingControlsEnabled);
     }
     
+    // Trigger validation after table rebuild in edit mode if there are existing errors
+    // This ensures validation states are maintained after operations like row removal
+    if (currentMode === 'edit' && validationErrors.size > 0) {
+        setTimeout(() => validateInputOnChange(), 50);
+    }
+    
     // Manage edit mode buttons in the RAM header
     const modeSwitch = document.querySelector('.mode-switch');
     const modeToggleBtn = document.getElementById('modeToggle');
@@ -361,41 +367,38 @@ function updateRAMTable() {
             modeToggleBtn.style.display = 'flex';
         }
         
-        // Show Save and Cancel buttons only if there are changes
-        if (hasChanges) {
-            // Create Save button if it doesn't exist
-            if (!saveButton) {
-                saveButton = document.createElement('button');
-                saveButton.textContent = 'Save All Changes';
-                saveButton.onclick = saveAllChanges;
-                saveButton.id = 'saveAllButton';
-                saveButton.className = 'save-changes-btn';
-                modeSwitch.insertBefore(saveButton, modeToggleBtn);
-            }
-            saveButton.style.display = 'inline-flex';
-            
-            // Create Cancel button if it doesn't exist
-            if (!cancelButton) {
-                cancelButton = document.createElement('button');
-                cancelButton.textContent = 'Cancel';
-                cancelButton.onclick = cancelChanges;
-                cancelButton.id = 'cancelButton';
-                cancelButton.className = 'cancel-changes-btn';
-                modeSwitch.insertBefore(cancelButton, modeToggleBtn);
-            }
-            cancelButton.style.display = 'inline-flex';
-            
-            // Update save button state based on validation errors
-            updateSaveButtonState();
-        } else {
-            // Remove save and cancel buttons when there are no changes
-            if (saveButton) {
-                saveButton.remove();
-            }
-            if (cancelButton) {
-                cancelButton.remove();
-            }
+        // Create Save button if it doesn't exist
+        if (!saveButton) {
+            saveButton = document.createElement('button');
+            saveButton.textContent = 'Save All Changes';
+            saveButton.onclick = saveAllChanges;
+            saveButton.id = 'saveAllButton';
+            saveButton.className = 'save-changes-btn';
+            saveButton.style.opacity = '0';
+            saveButton.style.pointerEvents = 'none';
+            modeSwitch.insertBefore(saveButton, modeToggleBtn);
         }
+        
+        // Create Cancel button if it doesn't exist
+        if (!cancelButton) {
+            cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.onclick = cancelChanges;
+            cancelButton.id = 'cancelButton';
+            cancelButton.className = 'cancel-changes-btn';
+            cancelButton.style.opacity = '0';
+            cancelButton.style.pointerEvents = 'none';
+            modeSwitch.insertBefore(cancelButton, modeToggleBtn);
+        }
+        
+        // Always show buttons in edit mode to prevent layout shifts
+        saveButton.style.opacity = '1';
+        saveButton.style.pointerEvents = 'auto';
+        cancelButton.style.opacity = '1';
+        cancelButton.style.pointerEvents = 'auto';
+        
+        // Update save button state based on validation errors
+        updateSaveButtonState();
     } else {
         // Show the mode toggle button in display mode
         if (modeToggleBtn) {
@@ -561,40 +564,38 @@ function updateEditModeButtons() {
     let cancelButton = document.getElementById('cancelButton');
     
     if (currentMode === 'edit') {
-        if (hasChanges) {
-            // Create Save button if it doesn't exist
-            if (!saveButton) {
-                saveButton = document.createElement('button');
-                saveButton.textContent = 'Save All Changes';
-                saveButton.onclick = saveAllChanges;
-                saveButton.id = 'saveAllButton';
-                saveButton.className = 'save-changes-btn';
-                modeSwitch.insertBefore(saveButton, modeToggleBtn);
-            }
-            saveButton.style.display = 'inline-flex';
-            
-            // Create Cancel button if it doesn't exist
-            if (!cancelButton) {
-                cancelButton = document.createElement('button');
-                cancelButton.textContent = 'Cancel';
-                cancelButton.onclick = cancelChanges;
-                cancelButton.id = 'cancelButton';
-                cancelButton.className = 'cancel-changes-btn';
-                modeSwitch.insertBefore(cancelButton, modeToggleBtn);
-            }
-            cancelButton.style.display = 'inline-flex';
-            
-            // Update save button state based on validation errors
-            updateSaveButtonState();
-        } else {
-            // Remove save and cancel buttons when there are no changes
-            if (saveButton) {
-                saveButton.remove();
-            }
-            if (cancelButton) {
-                cancelButton.remove();
-            }
+        // Create Save button if it doesn't exist
+        if (!saveButton) {
+            saveButton = document.createElement('button');
+            saveButton.textContent = 'Save All Changes';
+            saveButton.onclick = saveAllChanges;
+            saveButton.id = 'saveAllButton';
+            saveButton.className = 'save-changes-btn';
+            saveButton.style.opacity = '0';
+            saveButton.style.pointerEvents = 'none';
+            modeSwitch.insertBefore(saveButton, modeToggleBtn);
         }
+        
+        // Create Cancel button if it doesn't exist
+        if (!cancelButton) {
+            cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.onclick = cancelChanges;
+            cancelButton.id = 'cancelButton';
+            cancelButton.className = 'cancel-changes-btn';
+            cancelButton.style.opacity = '0';
+            cancelButton.style.pointerEvents = 'none';
+            modeSwitch.insertBefore(cancelButton, modeToggleBtn);
+        }
+        
+        // Always show buttons in edit mode to prevent layout shifts
+        saveButton.style.opacity = '1';
+        saveButton.style.pointerEvents = 'auto';
+        cancelButton.style.opacity = '1';
+        cancelButton.style.pointerEvents = 'auto';
+        
+        // Update save button state based on validation errors
+        updateSaveButtonState();
     }
 }
 
@@ -1085,7 +1086,7 @@ function displayError(message) {
     const errorDisplay = document.getElementById('executionError');
     if (errorDisplay) {
         errorDisplay.textContent = message;
-        errorDisplay.style.display = 'block';
+        errorDisplay.classList.add('visible');
     }
 }
 
@@ -1094,7 +1095,7 @@ function clearError() {
     const errorDisplay = document.getElementById('executionError');
     if (errorDisplay) {
         errorDisplay.textContent = '';
-        errorDisplay.style.display = 'none';
+        errorDisplay.classList.remove('visible');
     }
 }
 
@@ -1845,12 +1846,15 @@ function initializeValidationTooltips() {
     
     ramTable.addEventListener('mouseover', (e) => {
         const errorRow = e.target.closest('tr.validation-error');
-        if (errorRow && errorRow.hasAttribute('data-error')) {
+        if (errorRow && errorRow.hasAttribute('data-error') && validationTooltip) {
             const error = errorRow.getAttribute('data-error');
             const rect = errorRow.getBoundingClientRect();
             
             validationTooltip.textContent = error;
             validationTooltip.appendChild(arrow); // Re-append arrow after setting text
+            
+            // Remove any inline display style that might be blocking visibility
+            validationTooltip.style.display = '';
             
             // Position above the row
             const tooltipHeight = 60; // Approximate
@@ -1860,14 +1864,16 @@ function initializeValidationTooltips() {
             
             // Show after a delay
             setTimeout(() => {
-                validationTooltip.classList.add('show');
+                if (validationTooltip) {
+                    validationTooltip.classList.add('show');
+                }
             }, 300);
         }
     });
     
     ramTable.addEventListener('mouseout', (e) => {
         const errorRow = e.target.closest('tr.validation-error');
-        if (errorRow || !e.relatedTarget || !e.relatedTarget.closest) {
+        if ((errorRow || !e.relatedTarget || !e.relatedTarget.closest) && validationTooltip) {
             validationTooltip.classList.remove('show');
         }
     });
@@ -1875,12 +1881,15 @@ function initializeValidationTooltips() {
     // Handle mobile tap
     ramTable.addEventListener('touchstart', (e) => {
         const errorRow = e.target.closest('tr.validation-error');
-        if (errorRow && errorRow.hasAttribute('data-error')) {
+        if (errorRow && errorRow.hasAttribute('data-error') && validationTooltip) {
             const error = errorRow.getAttribute('data-error');
             const rect = errorRow.getBoundingClientRect();
             
             validationTooltip.textContent = error;
             validationTooltip.appendChild(arrow);
+            
+            // Remove any inline display style that might be blocking visibility
+            validationTooltip.style.display = '';
             
             const tooltipHeight = 60;
             validationTooltip.style.left = `${rect.left + rect.width / 2}px`;
@@ -1891,7 +1900,9 @@ function initializeValidationTooltips() {
             
             // Auto-hide after 3 seconds
             setTimeout(() => {
-                validationTooltip.classList.remove('show');
+                if (validationTooltip) {
+                    validationTooltip.classList.remove('show');
+                }
             }, 3000);
         }
     });

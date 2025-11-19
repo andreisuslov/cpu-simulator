@@ -42,13 +42,6 @@ cpu-simulator/
 └── package.json             # Node.js dependencies
 ```
 
-## Prerequisites
-
-- **Node.js** (v14 or higher)
-- **npm** (comes with Node.js)
-- A web browser (Chrome, Firefox, Safari, or Edge)
-- A local web server to serve static files (I use Python's http.server)
-
 ## Installation and running
 
 1. Install dependencies:

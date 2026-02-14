@@ -58,7 +58,7 @@
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-    z-index: 1000;
+    z-index: 10000;
     font-weight: 400;
     text-align: center;
 }
@@ -96,7 +96,7 @@
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-    z-index: 1000;
+    z-index: 10000;
     font-weight: 400;
     text-align: center;
 }
@@ -134,7 +134,7 @@
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-    z-index: 1000;
+    z-index: 10000;
     font-weight: 400;
     text-align: center;
 }
@@ -172,7 +172,7 @@
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
-    z-index: 1000;
+    z-index: 10000;
     font-weight: 400;
     text-align: center;
 }
@@ -277,6 +277,7 @@
         opacity: 1;
         visibility: visible;
         transform: translateX(-50%) scale(1);
+        pointer-events: auto;
     }
 
     .button-wrapper.show-tooltip .button-tooltip,
@@ -286,6 +287,7 @@
         opacity: 1;
         visibility: visible;
         transform: translateX(-50%) scale(1);
+        pointer-events: auto;
     }
 }
 

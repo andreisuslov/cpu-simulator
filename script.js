@@ -1478,26 +1478,26 @@ function updateTooltips() {
 // Function to adjust tooltip position to stay within viewport
 function adjustTooltipPosition(tooltip) {
     if (!tooltip) return;
-    
+
     // Reset any position adjustments
     tooltip.style.left = '';
     tooltip.style.right = '';
     tooltip.style.bottom = '';
     tooltip.style.top = '';
-    tooltip.style.transform = '';
     tooltip.classList.remove('tooltip-below');
-    
-    // Get tooltip and viewport dimensions
-    setTimeout(() => {
+
+    // Make visible at scale(1) immediately so we can measure, then adjust position
+    tooltip.style.transform = 'translateX(-50%) scale(1)';
+
+    // Use requestAnimationFrame to measure after the browser has laid out the tooltip
+    requestAnimationFrame(() => {
         const rect = tooltip.getBoundingClientRect();
-        const parentRect = tooltip.parentElement.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
         const padding = 10;
-        
+
         let transformX = '-50%';
         let transformY = '0';
-        
+
         // Check horizontal overflow
         if (rect.right > viewportWidth - padding) {
             const overflow = rect.right - (viewportWidth - padding);
@@ -1506,322 +1506,206 @@ function adjustTooltipPosition(tooltip) {
             const overflow = padding - rect.left;
             transformX = `calc(-50% + ${overflow}px)`;
         }
-        
+
         // Check vertical overflow - if tooltip goes above viewport, show it below instead
         if (rect.top < padding) {
             tooltip.style.bottom = 'auto';
             tooltip.style.top = 'calc(100% + 12px)';
-            
-            // Adjust arrow to point up
-            const arrow = window.getComputedStyle(tooltip, '::before');
-            if (arrow) {
-                tooltip.classList.add('tooltip-below');
-            }
+            tooltip.classList.add('tooltip-below');
         }
-        
+
         tooltip.style.transform = `translateX(${transformX}) translateY(${transformY}) scale(1)`;
-    }, 10);
+    });
 }
 
 // Initialize touch event handlers for mobile tooltips
 function initializeTooltips() {
     const phases = document.querySelectorAll('.execution-phase');
     const buttonWrapper = document.querySelector('.button-wrapper');
-    
+    const pcWrapper = document.querySelector('.pc-wrapper');
+    const irWrapper = document.querySelector('.ir-wrapper');
+    const accumulatorWrapper = document.querySelector('.accumulator-wrapper');
+
+    const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    // Track all auto-hide timeouts so they can be cleared properly
+    const tooltipTimeouts = new Map();
+
+    // Dismiss all open tooltips
+    function dismissAllTooltips() {
+        phases.forEach(p => p.classList.remove('show-tooltip'));
+        if (buttonWrapper) buttonWrapper.classList.remove('show-tooltip');
+        if (pcWrapper) pcWrapper.classList.remove('show-tooltip');
+        if (irWrapper) irWrapper.classList.remove('show-tooltip');
+        if (accumulatorWrapper) accumulatorWrapper.classList.remove('show-tooltip');
+        // Clear all pending auto-hide timeouts
+        tooltipTimeouts.forEach(t => clearTimeout(t));
+        tooltipTimeouts.clear();
+    }
+
+    // Show a tooltip on a wrapper element with auto-hide and viewport adjustment
+    function showTooltip(wrapper, tooltipSelector) {
+        // Dismiss all other tooltips first
+        dismissAllTooltips();
+
+        wrapper.classList.add('show-tooltip');
+
+        // Adjust position to stay within viewport
+        const tooltip = wrapper.querySelector(tooltipSelector);
+        adjustTooltipPosition(tooltip);
+
+        // Auto-hide after 4 seconds
+        const timeout = setTimeout(() => {
+            wrapper.classList.remove('show-tooltip');
+            tooltipTimeouts.delete(wrapper);
+        }, 4000);
+        tooltipTimeouts.set(wrapper, timeout);
+    }
+
+    // Toggle a tooltip on a wrapper element (tap to open, tap again to close)
+    function toggleTooltip(wrapper, tooltipSelector) {
+        const isShowing = wrapper.classList.contains('show-tooltip');
+        dismissAllTooltips();
+        if (!isShowing) {
+            showTooltip(wrapper, tooltipSelector);
+        }
+    }
+
+    // --- Phase tooltips ---
     phases.forEach(phaseElement => {
-        // Touch event for mobile
-        phaseElement.addEventListener('touchstart', function(e) {
-            // Don't show tooltips if auto mode is actively running
-            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
-            
-            // Remove show-tooltip from all phases
-            phases.forEach(p => p.classList.remove('show-tooltip'));
-            
-            // Add show-tooltip to this phase
-            this.classList.add('show-tooltip');
-            
-            // Adjust tooltip position to stay within viewport
-            const tooltip = this.querySelector('.phase-tooltip');
-            adjustTooltipPosition(tooltip);
-            
-            // Remove tooltip after 3 seconds
-            setTimeout(() => {
-                this.classList.remove('show-tooltip');
-            }, 3000);
-        });
-        
-        // Click event to toggle tooltip on mobile
-        phaseElement.addEventListener('click', function(e) {
-            // Don't show tooltips if auto mode is actively running
-            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
-            
-            // Check if it's a touch device
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        if (isTouchDevice) {
+            // On touch devices, use only touchstart to avoid dual-fire with click
+            phaseElement.addEventListener('touchstart', function(e) {
+                if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
                 e.preventDefault();
-                
-                // Toggle tooltip
-                const isShowing = this.classList.contains('show-tooltip');
-                
-                // Remove from all
-                phases.forEach(p => p.classList.remove('show-tooltip'));
-                
-                // Add to this one if it wasn't showing
-                if (!isShowing) {
-                    this.classList.add('show-tooltip');
-                    
-                    // Adjust tooltip position to stay within viewport
-                    const tooltip = this.querySelector('.phase-tooltip');
-                    adjustTooltipPosition(tooltip);
-                    
-                    // Auto-hide after 3 seconds
-                    setTimeout(() => {
-                        this.classList.remove('show-tooltip');
-                    }, 3000);
-                }
-            }
+                toggleTooltip(this, '.phase-tooltip');
+            });
+        }
+
+        // Click handler: on touch devices this is skipped (touchstart handles it),
+        // on non-touch this is a no-op since CSS :hover handles desktop tooltips
+        phaseElement.addEventListener('click', function(e) {
+            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+            if (isTouchDevice) return; // already handled by touchstart
         });
     });
-    
-    // Button tooltip touch handler
+
+    // --- Button tooltip ---
     if (buttonWrapper) {
-        let buttonTooltipTimeout;
-        
-        buttonWrapper.addEventListener('touchstart', function(e) {
-            // Don't show tooltips if auto mode is actively running
-            if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
-            
-            // Don't prevent default - let the button click work
-            // Just show the tooltip
-            this.classList.add('show-tooltip');
-            
-            // Clear any existing timeout
-            clearTimeout(buttonTooltipTimeout);
-            
-            // Auto-hide after 3 seconds
-            buttonTooltipTimeout = setTimeout(() => {
-                this.classList.remove('show-tooltip');
-            }, 3000);
-        });
-        
-        // Also handle long press on button
+        if (isTouchDevice) {
+            buttonWrapper.addEventListener('touchstart', function(e) {
+                if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
+                // Don't preventDefault — let the button click through
+                toggleTooltip(this, '.button-tooltip');
+            });
+        }
+
+        // Long press on button for non-touch devices
         let pressTimer;
         const clockTickBtn = document.getElementById('clockTick');
-        
-        if (clockTickBtn) {
-            clockTickBtn.addEventListener('mousedown', function(e) {
-                // Don't show tooltips if auto mode is actively running
+        if (clockTickBtn && !isTouchDevice) {
+            clockTickBtn.addEventListener('mousedown', function() {
                 if (executionMode === 'auto' && isAutoRunning && !isPaused) return;
-                
-                // Only for non-touch devices
-                if (!('ontouchstart' in window) && navigator.maxTouchPoints === 0) {
-                    pressTimer = setTimeout(() => {
-                        buttonWrapper.classList.add('show-tooltip');
-                        
-                        setTimeout(() => {
-                            buttonWrapper.classList.remove('show-tooltip');
-                        }, 3000);
-                    }, 700);
-                }
+                pressTimer = setTimeout(() => {
+                    showTooltip(buttonWrapper, '.button-tooltip');
+                }, 700);
             });
-            
+
             clockTickBtn.addEventListener('mouseup', function() {
                 clearTimeout(pressTimer);
             });
-            
+
             clockTickBtn.addEventListener('mouseleave', function() {
                 clearTimeout(pressTimer);
             });
         }
     }
-    
-    // Program Counter tooltip touch handler
-    const pcWrapper = document.querySelector('.pc-wrapper');
+
+    // --- Program Counter tooltip ---
     if (pcWrapper) {
-        let pcTooltipTimeout;
-        
-        pcWrapper.addEventListener('touchstart', function(e) {
-            // Show the tooltip
-            this.classList.add('show-tooltip');
-            
-            // Clear any existing timeout
-            clearTimeout(pcTooltipTimeout);
-            
-            // Auto-hide after 3 seconds
-            pcTooltipTimeout = setTimeout(() => {
-                this.classList.remove('show-tooltip');
-            }, 3000);
-        });
-        
-        // Click handler for mobile
-        pcWrapper.addEventListener('click', function(e) {
-            // Check if it's a touch device
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        if (isTouchDevice) {
+            pcWrapper.addEventListener('touchstart', function(e) {
                 e.preventDefault();
-                
-                // Toggle tooltip
-                const isShowing = this.classList.contains('show-tooltip');
-                
-                // Remove from all
-                phases.forEach(p => p.classList.remove('show-tooltip'));
-                if (buttonWrapper) {
-                    buttonWrapper.classList.remove('show-tooltip');
-                }
-                
-                // Add to this one if it wasn't showing
-                if (!isShowing) {
-                    this.classList.add('show-tooltip');
-                    
-                    // Auto-hide after 3 seconds
-                    clearTimeout(pcTooltipTimeout);
-                    pcTooltipTimeout = setTimeout(() => {
-                        this.classList.remove('show-tooltip');
-                    }, 3000);
-                }
-            }
-        });
-    }
-    
-    // Instruction Register tooltip touch handler
-    const irWrapper = document.querySelector('.ir-wrapper');
-    if (irWrapper) {
-        let irTooltipTimeout;
-        
-        irWrapper.addEventListener('touchstart', function(e) {
-            // Show the tooltip
-            this.classList.add('show-tooltip');
-            
-            // Clear any existing timeout
-            clearTimeout(irTooltipTimeout);
-            
-            // Auto-hide after 3 seconds
-            irTooltipTimeout = setTimeout(() => {
-                this.classList.remove('show-tooltip');
-            }, 3000);
-        });
-        
-        // Click handler for mobile
-        irWrapper.addEventListener('click', function(e) {
-            // Check if it's a touch device
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                e.preventDefault();
-                
-                // Toggle tooltip
-                const isShowing = this.classList.contains('show-tooltip');
-                
-                // Remove from all
-                phases.forEach(p => p.classList.remove('show-tooltip'));
-                if (buttonWrapper) {
-                    buttonWrapper.classList.remove('show-tooltip');
-                }
-                
-                // Add to this one if it wasn't showing
-                if (!isShowing) {
-                    this.classList.add('show-tooltip');
-                    
-                    // Auto-hide after 3 seconds
-                    clearTimeout(irTooltipTimeout);
-                    irTooltipTimeout = setTimeout(() => {
-                        this.classList.remove('show-tooltip');
-                    }, 3000);
-                }
-            }
-        });
-    }
-    
-    // Accumulator tooltip touch handler
-    const accumulatorWrapper = document.querySelector('.accumulator-wrapper');
-    if (accumulatorWrapper) {
-        let accTooltipTimeout;
-        
-        accumulatorWrapper.addEventListener('touchstart', function(e) {
-            // Don't show tooltip if clicking the reset button
-            if (e.target.closest('.reset-btn')) return;
-            
-            // Show the tooltip
-            this.classList.add('show-tooltip');
-            
-            // Clear any existing timeout
-            clearTimeout(accTooltipTimeout);
-            
-            // Auto-hide after 3 seconds
-            accTooltipTimeout = setTimeout(() => {
-                this.classList.remove('show-tooltip');
-            }, 3000);
-        });
-        
-        // Click handler for mobile
-        accumulatorWrapper.addEventListener('click', function(e) {
-            // Don't show tooltip if clicking the reset button
-            if (e.target.closest('.reset-btn')) return;
-            
-            // Check if it's a touch device
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                e.preventDefault();
-                
-                // Toggle tooltip
-                const isShowing = this.classList.contains('show-tooltip');
-                
-                // Remove from all
-                phases.forEach(p => p.classList.remove('show-tooltip'));
-                if (buttonWrapper) {
-                    buttonWrapper.classList.remove('show-tooltip');
-                }
-                
-                // Add to this one if it wasn't showing
-                if (!isShowing) {
-                    this.classList.add('show-tooltip');
-                    
-                    // Auto-hide after 3 seconds
-                    clearTimeout(accTooltipTimeout);
-                    accTooltipTimeout = setTimeout(() => {
-                        this.classList.remove('show-tooltip');
-                    }, 3000);
-                }
-            }
-        });
-    }
-    
-    // Close tooltips when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.execution-phase') && 
-            !e.target.closest('.button-wrapper') && 
-            !e.target.closest('.pc-wrapper') &&
-            !e.target.closest('.ir-wrapper') &&
-            !e.target.closest('.accumulator-wrapper')) {
-            phases.forEach(p => p.classList.remove('show-tooltip'));
-            if (buttonWrapper) {
-                buttonWrapper.classList.remove('show-tooltip');
-            }
-            if (pcWrapper) {
-                pcWrapper.classList.remove('show-tooltip');
-            }
-            if (irWrapper) {
-                irWrapper.classList.remove('show-tooltip');
-            }
-            if (accumulatorWrapper) {
-                accumulatorWrapper.classList.remove('show-tooltip');
-            }
+                toggleTooltip(this, '.pc-tooltip');
+            });
         }
-        
+    }
+
+    // --- Instruction Register tooltip ---
+    if (irWrapper) {
+        if (isTouchDevice) {
+            irWrapper.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                toggleTooltip(this, '.ir-tooltip');
+            });
+        }
+    }
+
+    // --- Accumulator tooltip ---
+    if (accumulatorWrapper) {
+        if (isTouchDevice) {
+            accumulatorWrapper.addEventListener('touchstart', function(e) {
+                // Don't show tooltip if tapping the reset button
+                if (e.target.closest('.reset-btn')) return;
+                e.preventDefault();
+                toggleTooltip(this, '.accumulator-tooltip');
+            });
+        }
+    }
+
+    // --- Close tooltips when tapping/clicking outside ---
+    document.addEventListener('click', function(e) {
+        const isTooltipArea = e.target.closest('.execution-phase') ||
+            e.target.closest('.button-wrapper') ||
+            e.target.closest('.pc-wrapper') ||
+            e.target.closest('.ir-wrapper') ||
+            e.target.closest('.accumulator-wrapper') ||
+            e.target.closest('.phase-tooltip') ||
+            e.target.closest('.button-tooltip') ||
+            e.target.closest('.pc-tooltip') ||
+            e.target.closest('.ir-tooltip') ||
+            e.target.closest('.accumulator-tooltip');
+
+        if (!isTooltipArea) {
+            dismissAllTooltips();
+        }
+
         // Handle error tooltip on mobile
         if (!e.target.closest('tr.validation-error')) {
             const errorRows = document.querySelectorAll('tr.validation-error');
             errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
         }
     });
-    
-    // Add touch handler for validation error tooltips
+
+    // --- Dismiss tooltips on scroll ---
+    let scrollDismissTimeout;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollDismissTimeout);
+        scrollDismissTimeout = setTimeout(() => {
+            dismissAllTooltips();
+        }, 100);
+    }, { passive: true });
+
+    // Also handle scroll on the main container (for inner scrollable areas)
+    const container = document.querySelector('.container');
+    if (container) {
+        container.addEventListener('scroll', function() {
+            clearTimeout(scrollDismissTimeout);
+            scrollDismissTimeout = setTimeout(() => {
+                dismissAllTooltips();
+            }, 100);
+        }, { passive: true });
+    }
+
+    // --- Validation error tooltips on touch ---
     document.addEventListener('touchstart', function(e) {
         const errorRow = e.target.closest('tr.validation-error');
         if (errorRow) {
-            // Remove from all error rows
             const errorRows = document.querySelectorAll('tr.validation-error');
             errorRows.forEach(row => row.classList.remove('show-error-tooltip'));
-            
-            // Add to this row
+
             errorRow.classList.add('show-error-tooltip');
-            
-            // Auto-hide after 3 seconds
+
             setTimeout(() => {
                 errorRow.classList.remove('show-error-tooltip');
             }, 3000);

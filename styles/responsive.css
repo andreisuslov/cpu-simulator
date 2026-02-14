@@ -108,6 +108,38 @@
         margin-bottom: 6px;
     }
 
+    /* Reduce electric highlight intensity for mobile */
+    .register-value.electric-active {
+        animation: electric-pulse-mobile 0.6s ease-in-out;
+    }
+
+    .register-value.electric-active::before {
+        opacity: 0.15;
+        filter: blur(0.5px);
+    }
+
+    .active-phase {
+        box-shadow: 0 0 8px rgba(221, 132, 72, 0.15);
+    }
+
+    tr.electric-active-row td {
+        animation: electric-pulse-mobile 0.6s ease-in-out;
+    }
+
+    tr.electric-active-row::after {
+        width: calc(100% + 6px);
+        height: calc(100% + 6px);
+        filter: blur(6px);
+        background: radial-gradient(
+            ellipse,
+            rgba(221, 132, 72, 0.25) 0%,
+            rgba(255, 163, 102, 0.1) 40%,
+            transparent 70%
+        );
+        border-radius: 8px;
+        animation: electric-pulse-mobile 0.6s ease-in-out;
+    }
+
     button {
         padding: 12px 20px;
         font-size: 14px;
